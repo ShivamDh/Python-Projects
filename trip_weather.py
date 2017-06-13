@@ -1,12 +1,27 @@
 import requests
 from key_wunderland import key_wunderland
+from googlemaps.client import Client
+from key_google import key_google
+from googlemaps.directions import directions
+from googlemaps.geocoding import geocode
+from math import ceil
 
-city = input("Test a city of whose weather you want: ")
-country = input("To double check, enter the country: ")
+startLocation = input("Enter the starting location: ")
+endLocation = input("Enter the ending location: ")
 
-requestURL = 'http://api.wunderground.com/api/{0}/geolookup/conditions/q/{1}/{2}.json'.format(key_wunderland, country, city)
+mapService = Client(key=key_google)
+geocode_start = geocode(mapService, startLocation)
+geocode_end = geocode(mapService, endLocation)
+
+requestURL = 'http://api.wunderground.com/api/{0}/geolookup/q/{1},{2}.json'.format(
+    key_wunderland, geocode_start[0]['geometry']['location']['lat'], geocode_start[0]['geometry']['location']['lng'])
 
 data = requests.get(requestURL).json()
+
+direction_data = directions(mapService, startLocation, endLocation)
+journey_segments = ceil(direction_data[0]['legs'][0]['distance']['value']/50000)
+print("\n\nSegment Number: %s" %(journey_segments))
+
 location = {}
 
 print("Current temperature is %s" %(data))
