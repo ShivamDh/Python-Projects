@@ -4,7 +4,7 @@ from googlemaps.client import Client
 from key_google import key_google
 from googlemaps.directions import directions
 from googlemaps.geocoding import geocode
-from math import ceil, floor
+from math import ceil
 
 print("Hint: Enter as descriptive as an address possible (preferably add cities to address)")
 startLocation = input("Enter the starting location: ")
@@ -85,14 +85,55 @@ for i in range(0, len(all_numbered_coords) - 1, 2):
     
 weather_segments = []
 for segment in range(journey_segments + 1):
-    coordinate_number = floor(segment/journey_segments * (len(the_coords) - 1))
+    coordinate_number = segment//journey_segments * (len(the_coords) - 1)
     weather_segments.append(the_coords[coordinate_number])
-
+    
 for xcoord, ycoord in weather_segments:
     requestURL = 'http://api.wunderground.com/api/{0}/conditions/forecast/q/{1},{2}.json'.format(
         key_wunderland, xcoord, ycoord)
 
     data = requests.get(requestURL).json()
     
-    print("{0}".format(data))
+isForecast = input('Are you looking for current conditions (y/n): ')
+
+futureForecast = 0
+if isForecast == 'n' or isForecast == 'N':
+    print('For how many days in the future are you looking to forecast: ')
+    futureForecast = input('1, 2, or 3 days: ')
+    futureForecastDay = data['forecast']['simpleforecast']['forecastday'][futureForecast]
+    
+    print('What kinds of specific details are you looking to get: ')
+    print('\t(1) High/Low Temperature \n\t(2) Precipitation \n\t(3) Humidity \n\t(4) Wind')
+    choicesSelected = input ('Enter all numbers that apply: ')
+    
+    print('\nConditions: {0}'.format(futureForecastDay['conditions']))
+    print('Lastly, what unit system would you like: \n\t(1) Metric \n\t(2) Imperial')
+    units = input('Select one by entering the appropriate number: ')
+    
+    if '1' in choicesSelected:
+        if '1' in units:
+            print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
+                futureForecastDay['high']['celsius'], futureForecastDay['low']['celsius']))
+        else:
+            print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
+                futureForecastDay['high']['fahrenheit'], futureForecastDay['low']['fahrenheit']))
+            
+    if '2' in choicesSelected:
+        print('Percent(Chances) of Precipitation: {0}'.format(futureForecastDay['pop']))
+        if '1' in units:
+            print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
+                futureForecastDay['qpf_allday']['mm'], futureForecastDay['qpf_day']['mm']))
+        else:
+            print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
+                futureForecastDay['qpf_allday']['in'], futureForecastDay['qpf_day']['in']))
+            
+    if '3' in choicesSelected:
+        print('Average Humidity: {0}%'.format(futureForecastDay['avehumidity']))
+        
+    if '4' in choicesSelected:
+        print()
+else:
+    print('What current details would you like about your trip:')
+    
+    
     
