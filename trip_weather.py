@@ -16,19 +16,6 @@ geocode_end = geocode(mapService, endLocation)
 
 direction_data = directions(mapService, startLocation, endLocation)
 journey_segments = ceil(direction_data[0]['legs'][0]['distance']['value']/50000)
-print("\n\nSegment Number: %s" %(journey_segments))
-
-
-
-requestURL = 'http://api.wunderground.com/api/{0}/geolookup/q/{1},{2}.json'.format(
-    key_wunderland, geocode_start[0]['geometry']['location']['lat'], geocode_start[0]['geometry']['location']['lng'])
-
-data = requests.get(requestURL).json()
-
-print("Current temperature is {0}".format(direction_data))
-print (requestURL)
-
-
 
 '''Decodes Google Maps polyline that's encoded using a specific algorithm
 available at: http://code.google.com/apis/maps/documentation/polylinealgorithm.html '''
@@ -88,52 +75,74 @@ for segment in range(journey_segments + 1):
     coordinate_number = segment//journey_segments * (len(the_coords) - 1)
     weather_segments.append(the_coords[coordinate_number])
     
-for xcoord, ycoord in weather_segments:
-    requestURL = 'http://api.wunderground.com/api/{0}/conditions/forecast/q/{1},{2}.json'.format(
-        key_wunderland, xcoord, ycoord)
-
-    data = requests.get(requestURL).json()
-    
-isForecast = input('Are you looking for current conditions (y/n): ')
+isForecast = input('\nAre you looking for current conditions (y/n): ')
 
 futureForecast = 0
 if isForecast == 'n' or isForecast == 'N':
     print('For how many days in the future are you looking to forecast: ')
     futureForecast = input('1, 2, or 3 days: ')
-    futureForecastDay = data['forecast']['simpleforecast']['forecastday'][futureForecast]
     
-    print('What kinds of specific details are you looking to get: ')
+    print('\nWhat kinds of specific details are you looking to get: ')
     print('\t(1) High/Low Temperature \n\t(2) Precipitation \n\t(3) Humidity \n\t(4) Wind')
     choicesSelected = input ('Enter all numbers that apply: ')
     
-    print('\nConditions: {0}'.format(futureForecastDay['conditions']))
-    print('Lastly, what unit system would you like: \n\t(1) Metric \n\t(2) Imperial')
+    print('Lastly, what unit system would you like your results in: \n\t(1) Metric \n\t(2) Imperial')
     units = input('Select one by entering the appropriate number: ')
-    
-    if '1' in choicesSelected:
-        if '1' in units:
-            print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
-                futureForecastDay['high']['celsius'], futureForecastDay['low']['celsius']))
-        else:
-            print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
-                futureForecastDay['high']['fahrenheit'], futureForecastDay['low']['fahrenheit']))
-            
-    if '2' in choicesSelected:
-        print('Percent(Chances) of Precipitation: {0}'.format(futureForecastDay['pop']))
-        if '1' in units:
-            print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
-                futureForecastDay['qpf_allday']['mm'], futureForecastDay['qpf_day']['mm']))
-        else:
-            print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
-                futureForecastDay['qpf_allday']['in'], futureForecastDay['qpf_day']['in']))
-            
-    if '3' in choicesSelected:
-        print('Average Humidity: {0}%'.format(futureForecastDay['avehumidity']))
+    while '1' in units and '2' in units:
+        units = input('Select only one type, either Metric or Imperial: ')
         
-    if '4' in choicesSelected:
-        print()
+    locationNumber = 1
+    
+    for xcoord, ycoord in weather_segments:
+        requestURL = 'http://api.wunderground.com/api/{0}/conditions/forecast/q/{1},{2}.json'.format(
+            key_wunderland, xcoord, ycoord)
+    
+        data = requests.get(requestURL).json()
+        futureForecastDay = data['forecast']['simpleforecast']['forecastday'][int(futureForecast)]
+        print('\nLocation Number: {0}'.format(locationNumber))
+        print('Conditions: {0}'.format(futureForecastDay['conditions']))
+    
+        if '1' in choicesSelected:
+            if '1' in units:
+                print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
+                    futureForecastDay['high']['celsius'], futureForecastDay['low']['celsius']))
+            else:
+                print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
+                    futureForecastDay['high']['fahrenheit'], futureForecastDay['low']['fahrenheit']))
+                
+        if '2' in choicesSelected:
+            print('\tPercent(Chances) of Precipitation: {0}'.format(futureForecastDay['pop']))
+            if '1' in units:
+                print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
+                    futureForecastDay['qpf_allday']['mm'], futureForecastDay['qpf_day']['mm']))
+            else:
+                print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
+                    futureForecastDay['qpf_allday']['in'], futureForecastDay['qpf_day']['in']))
+                
+        if '3' in choicesSelected:
+            print('\tAverage Humidity: {0}%'.format(futureForecastDay['avehumidity']))
+            
+        if '4' in choicesSelected:
+            print('\tAverage Wind: \n\t\tDirection/Degrees: {0}/{1}'.format(
+                futureForecastDay['avewind']['dir'], futureForecastDay['avewind']['degrees']))
+            if '1' in units:
+                print('\t\tSpeed: {0}'.format(futureForecastDay['avewind']['kph']))
+            else:
+                print('\t\tSpeed: {0}'.format(futureForecastDay['avewind']['mph']))
+            print('\tMax Wind: \n\t\tDirection/Degrees: {0}/{1}'.format(
+                futureForecastDay['maxwind']['dir'], futureForecastDay['maxwind']['degrees']))
+            if '1' in units:
+                print('\t\tSpeed: {0}'.format(futureForecastDay['maxwind']['kph']))
+            else:
+                print('\t\tSpeed: {0}'.format(futureForecastDay['maxwind']['mph']))
+        
+        locationNumber += 1
 else:
     print('What current details would you like about your trip:')
+    for xcoord, ycoord in weather_segments:
+        requestURL = 'http://api.wunderground.com/api/{0}/conditions/forecast/q/{1},{2}.json'.format(
+            key_wunderland, xcoord, ycoord)
     
+        data = requests.get(requestURL).json()
     
     
