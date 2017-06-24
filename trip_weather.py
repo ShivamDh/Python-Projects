@@ -139,10 +139,67 @@ if isForecast == 'n' or isForecast == 'N':
         locationNumber += 1
 else:
     print('What current details would you like about your trip:')
+    print('\t(1) Temperature \n\t(2) Precipitation \n\t(3) Humidity \n\t(4) Wind Chill and Feels Like \
+        \n\t(5) Heat Index and UV \n\t(6) Visibility and Wind Gusts')
+    choicesSelected = input ('Enter all numbers that apply: ')
+    
+    print('Lastly, what unit system would you like your results in: \n\t(1) Metric \n\t(2) Imperial')
+    units = input('Select one by entering the appropriate number: ')
+    while '1' in units and '2' in units:
+        units = input('Select only one type, either Metric or Imperial: ')
+        
+    locationNumber = 1
+    
     for xcoord, ycoord in weather_segments:
         requestURL = 'http://api.wunderground.com/api/{0}/conditions/forecast/q/{1},{2}.json'.format(
             key_wunderland, xcoord, ycoord)
     
         data = requests.get(requestURL).json()
+        weatherNow = data['current_observation']
+        
+        print('\nLocation Number: {0}'.format(locationNumber))
+        print('Conditions: {0}'.format(weatherNow['weather']))
+    
+        if '1' in choicesSelected:
+            if '1' in units:
+                print('\tTemperature: {0}\n\tFeels Like: {1}'.format(
+                    weatherNow['temp_c'], weatherNow['feelslike_c']))
+            else:
+                print('\tTemperature: {0}\n\tFeels Like: {1}'.format(
+                    weatherNow['temp_f'], weatherNow['feelslike_f']))
+                
+        if '2' in choicesSelected:
+            if '1' in units:
+                print('\tPrecipitation in the last hour: {0}\n\tPrecipitation Today: {1}'.format(
+                    weatherNow['precip_1hr_metric'], weatherNow['precip_today_metric']))
+            else:
+                print('\tPrecipitation in the last hour: {0}\n\tPrecipitation Today: {1}'.format(
+                    weatherNow['precip_1hr_in'], weatherNow['precip_today_in']))
+                
+        if '3' in choicesSelected:
+            print('\tRelative Humidity: {0}'.format(weatherNow['relative_humidity']))
+            
+        if '4' in choicesSelected:
+            if '1' in units:
+                print('\tWind Chill: {0}\n\tFeels Like: {1}'.format(weatherNow['windchill_c'], weatherNow['feelslike_c']))
+            else:
+                print('\tWind Chill: {0}\n\tFeels Like: {1}'.format(weatherNow['windchill_f'], weatherNow['feelslike_f']))
+        
+        if '5' in choicesSelected:
+            if '1' in units: 
+                print('\tHeat Index: {0}'.format(weatherNow['heat_index_c']))
+            else:
+                print('\tHeat Index: {0}'.format(weatherNow['heat_index_f']))
+            print('\tUV: {0}'.format(weatherNow['UV']))
+            
+        if '6' in choicesSelected:
+            if '1' in units:
+                print('Visibility: {0}\n\tWind Conditions: {1}\n\t\tWind Speed: {2}\n\t\tWind Gusts: {3}'.format(
+                    weatherNow['visibility_km'], weatherNow['wind_string'], weatherNow['wind_kph'], weatherNow['wind_gust_kph']))
+            else:
+                print('Visibility: {0}\n\tWind Conditions: {1}\n\t\tWind Speed: {2}\n\t\tWind Gusts: {3}'.format(
+                    weatherNow['visibility_mi'], weatherNow['wind_string'], weatherNow['wind_mph'], weatherNow['wind_gust_mph']))
+            print('\t\tWind Direction/Degrees: {0}/{1}'.format(weatherNow['wind_dir'], weatherNow['wind_degrees']))
+        locationNumber += 1
     
     
