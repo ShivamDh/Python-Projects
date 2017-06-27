@@ -16,17 +16,18 @@ geocode_end = geocode(mapService, endLocation)
 
 direction_data = directions(mapService, startLocation, endLocation)
 
-journey_options = input('How would you like to view your weather on this trip:\n\t(1)In a specific number of segments over the entire trip\
-    \n\t(2)Over segments each long spanning a specific distance\n\t(3) Take default setting of every 50km\n')
+journey_options = input('How would you like to view your weather on this trip:\n\t(1) In a specific number of segments over the entire trip\
+    \n\t(2) Over segments each long spanning a specific distance\n\t(3) Take default setting of every 50km\n')
 
 while '1' in journey_options and '2' in journey_options:
         units = input('Select only option')
         
 if '1' in journey_options:
-    journey_segments = input('How many segments should this trip be broken into to see each individual segment\'s weather: ')
+    journey_segments_string = input('How many segments should this trip be broken into to see each individual segment\'s weather: ')
+    journey_segments = int(journey_segments_string)
 elif '2' in journey_options:
     segment_distance = input('Each segment should be comprised of approximately how many kilometers: ')
-    journey_segments = ceil(direction_data[0]['legs'][0]['distance']['value']/(segment_distance*1000))
+    journey_segments = ceil(direction_data[0]['legs'][0]['distance']['value']/(int(segment_distance)*1000))
 else:
     journey_segments = ceil(direction_data[0]['legs'][0]['distance']['value']/50000)
 
@@ -117,17 +118,18 @@ if isForecast == 'n' or isForecast == 'N':
     
         if '1' in choicesSelected:
             temp_units = 'celsius' if '1' in units else 'fahrenheit'
+            temp_format = 'C' if '1' in units else 'F'
             
-            print('\tTemperature High: {0}\n\tTemperature Low: {1}'.format(
-                futureForecastDay['high'][temp_units], futureForecastDay['low'][temp_units]))
+            print('\tTemperature High: {0}{1}\n\tTemperature Low: {2}{1}'.format(
+                futureForecastDay['high'][temp_units], temp_format, futureForecastDay['low'][temp_units]))
             
         if '2' in choicesSelected:
             print('\tPercent(Chances) of Precipitation: {0}'.format(futureForecastDay['pop']))
             
             precip_units = 'mm' if '1' in units else 'in'
             
-            print('\tPrecipitation All Day: {0}\n\tPrecipitation during the Day: {1}'.format(
-                    futureForecastDay['qpf_allday'][precip_units], futureForecastDay['qpf_day'][precip_units]))
+            print('\tPrecipitation All Day: {0}{1}\n\tPrecipitation during the Day: {2}{1}'.format(
+                    futureForecastDay['qpf_allday'][precip_units], precip_units, futureForecastDay['qpf_day'][precip_units]))
                 
         if '3' in choicesSelected:
             print('\tAverage Humidity: {0}%'.format(futureForecastDay['avehumidity']))
@@ -138,11 +140,11 @@ if isForecast == 'n' or isForecast == 'N':
             
             speed_units = 'kph' if '1' in units else 'mph'
             
-            print('\t\tSpeed: {0}'.format(futureForecastDay['avewind'][speed_units]))
+            print('\t\tSpeed: {0}{1}'.format(futureForecastDay['avewind'][speed_units], speed_units))
             
             print('\tMax Wind: \n\t\tDirection/Degrees: {0}/{1}'.format(
                 futureForecastDay['maxwind']['dir'], futureForecastDay['maxwind']['degrees']))
-            print('\t\tSpeed: {0}'.format(futureForecastDay['maxwind'][speed_units]))
+            print('\t\tSpeed: {0}{1}'.format(futureForecastDay['maxwind'][speed_units], speed_units))
         
         locationNumber += 1
 else:
@@ -171,24 +173,30 @@ else:
         if '1' in choicesSelected:
             temp_right_now_units = 'temp_c' if '1' in units else 'temp_f'
             feels_like_units = 'feelslike_c' if '1' in units else 'feelslike_f'
+            temperature_format = 'C' if '1' in units else 'F'
             
-            print('\tTemperature: {0}\n\tFeels Like: {1}'.format(
-                weatherNow[temp_right_now_units], weatherNow[feels_like_units]))
+            print('\tTemperature: {0}{1}\n\tFeels Like: {2}{1}'.format(
+                weatherNow[temp_right_now_units], temperature_format, weatherNow[feels_like_units]))
                 
         if '2' in choicesSelected:
             precip_hr_units = 'precip_1hr_metric' if '1' in units else 'precip_1hr_in'
             precip_today_units = 'precip_today_metric' if '1' in units else 'precip_today_in'
+            precipitation_format = 'mm' if '1' in units else 'in'
             
-            print('\tPrecipitation in the last hour: {0}\n\tPrecipitation Today: {1}'.format(
-                weatherNow[precip_hr_units], weatherNow[precip_today_units]))
+            print('\tPrecipitation in the last hour: {0}{1}\n\tPrecipitation Today: {2}{1}'.format(
+                weatherNow[precip_hr_units], precipitation_format, weatherNow[precip_today_units]))
             
         if '3' in choicesSelected:
             print('\tRelative Humidity: {0}'.format(weatherNow['relative_humidity']))
             
         if '4' in choicesSelected:
-            wind_chill_units = 'windchill_c' if '1' in units else 'windchill_f'
+            wind_chill_now = 'windchill_c' if '1' in units else 'windchill_f'
+            if 'NA' in weatherNow[wind_chill_now]:
+                wind_chill_units = 'C' if '1' in units else 'F'
+            else:
+                wind_chill_units = ''
             
-            print('\tWind Chill: {0}'.format(wind_chill_units))
+            print('\tWind Chill: {0}{1}'.format(weatherNow[wind_chill_now], wind_chill_units))
             
         if '5' in choicesSelected:
             heat_index_units = 'heat_index_c' if '1' in units else 'heat_index_f'
@@ -196,14 +204,16 @@ else:
             print('\tHeat Index: {0}\n\tUV: {1}'.format(weatherNow[heat_index_units], weatherNow['UV']))
             
         if '6' in choicesSelected:
-            visibility_units = 'visibility_km' if '1' in units else 'visibility_mi'
+            visibility_now = 'visibility_km' if '1' in units else 'visibility_mi'
+            units_chosen = 'km' if '1' in units else 'miles'
             wind_units = 'wind_kph' if '1' in units else 'wind_mph'
             wind_gust_units = 'wind_gust_kph' if '1' in units else 'wind_gust_mph'
             
-            print('Visibility: {0}\n\tWind Conditions: {1}\n\t\tWind Speed: {2}\n\t\tWind Gusts: {3}'.format(
-                weatherNow[visibility_units], weatherNow['wind_string'], weatherNow[wind_units], weatherNow[wind_gust_units]))
+            print('\tVisibility: {0}{1}\n\tWind Conditions: {2}\n\t\tWind Speed: {3}{1}/h\n\t\tWind Gusts: {4}{1}/h'.format(
+                weatherNow[visibility_now], units_chosen, weatherNow['wind_string'], weatherNow[wind_units],
+                weatherNow[wind_gust_units]))
             
-            print('\t\tWind Direction/Degrees: {0}/{1}'.format(weatherNow['wind_dir'], weatherNow['wind_degrees']))
+            print('\t\tWind Direction/Degrees: {0}/{1}degrees'.format(weatherNow['wind_dir'], weatherNow['wind_degrees']))
         locationNumber += 1
     
     
