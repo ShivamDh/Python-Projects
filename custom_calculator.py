@@ -1,4 +1,80 @@
 from tkinter import *
+from tkinter import ttk  # @Reimport
+
+
+class Calculator:
+    
+    def numberPressed(self, number):
+        print('Number Pressed {0}'.format(str(number)))
+        
+    def operatorPressed(self, operation):
+        print('Operation Pressed {0}'.format(operation))
+        
+    def clearPressed(self):
+        print('Clear Pressed')
+        
+    def plus_minus(self):
+        print('Plus Minus clicked')
+    
+    def dotPressed(self):
+        print('Dot clicked')
+    
+    def square_root(self):
+        print('Square Root')
+        
+    def powerOf(self):
+        print('To the Power of')
+    
+    def __init__(self, root):
+        self.entry= StringVar(root, value='')
+        
+        self.calc_value: 0.0
+        self.math_button_pressed = ''
+        self.number_button_pressed = ''
+        
+        root.title('Custom Calculator')
+        root.resizable(width=False, height=False)
+        
+        style=ttk.Style()
+        
+        style.configure('TEntry', font='Serif 18', padding=10)
+        self.entry_output = ttk.Entry(root,
+                        textvariable=self.entry, width=74)
+        self.entry_output.grid(row=0, columnspan=6)
+        
+        
+        style.configure('TButton', font='Times 14', padding=5)
+
+        ttk.Button(root, text=u'\u221A', command=lambda: self.operatorPressed('square root')).grid(row=1, column=0)
+        ttk.Button(root, text='CE', command=lambda: self.operatorPressed('clear')).grid(row=1, column=1)
+        ttk.Button(root, text=u'\u0302', command=lambda: self.operatorPressed('power')).grid(row=1, column=2)
+        ttk.Button(root, text='/', command=lambda: self.operatorPressed('divide')).grid(row=1, column=3)
+        
+        ttk.Button(root, text='7', command=lambda: self.numberPressed(7)).grid(row=2, column=0)
+        ttk.Button(root, text='8', command=lambda: self.numberPressed(8)).grid(row=2, column=1)
+        ttk.Button(root, text='9', command=lambda: self.numberPressed(9)).grid(row=2, column=2)
+        ttk.Button(root, text=u'\u00D7', command=lambda: self.operatorPressed('multiply')).grid(row=2, column=3)
+        
+        ttk.Button(root, text='4', command=lambda: self.numberPressed(4)).grid(row=3, column=0)
+        ttk.Button(root, text='5', command=lambda: self.numberPressed(5)).grid(row=3, column=1)
+        ttk.Button(root, text='6', command=lambda: self.numberPressed(6)).grid(row=3, column=2)
+        ttk.Button(root, text='-', command=lambda: self.operatorPressed('subtract')).grid(row=3, column=3)
+        
+        ttk.Button(root, text='1', command=lambda: self.numberPressed(1)).grid(row=4, column=0)
+        ttk.Button(root, text='2', command=lambda: self.numberPressed(2)).grid(row=4, column=1)
+        ttk.Button(root, text='3', command=lambda: self.numberPressed(3)).grid(row=4, column=2)
+        ttk.Button(root, text='+', command=lambda: self.operatorPressed('add')).grid(row=4, column=3)
+        
+        ttk.Button(root, text=u'\u00B1', command=self.plus_minus).grid(row=5, column=0)
+        ttk.Button(root, text='0', command=lambda: self.numberPressed(0)).grid(row=5, column=1)
+        ttk.Button(root, text='.', command=self.dotPressed).grid(row=5, column=2)
+        ttk.Button(root, text='=', command=lambda: self.operatorPressed('equal')).grid(row=5, column=3)
+                
+#         cancel_button = Button(root, text="Cancel", fg="red")
+#         cancel_button.grid(row=1, column=0)
+        
+        
+        
 
 def sizeSmall():
     print('Change size to small')
@@ -30,6 +106,9 @@ def useDecimalNotation():
         
 
 root = Tk()
+
+mainFrame = Calculator(root)
+
 
 topMenu = Menu(root)
 root.config(menu = topMenu)
