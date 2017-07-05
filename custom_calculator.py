@@ -33,20 +33,47 @@ class Calculator:
     def calc_new_value(self):
         print("in calc_new_value {0}".format(self.last_operator))
         if self.last_operator == '+':
-            pass
+            self.calc_value += float(self.number)
+            self.entry.set(self.calc_value)
         elif self.last_operator == '-':
-            pass
+            self.calc_value -= float(self.number)
+            self.entry.set(self.calc_value)
         elif self.last_operator == 'multiply':
-            pass
+            self.calc_value *= float(self.number)
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'power':
+            self.calc_value = pow(self.calc_value, float(self.number))
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'nth root':
+            self.calc_value = pow(float(self.number), 1/self.calc_value)
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'power 10':
+            self.calc_value = pow(10, float(self.number))
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'log':
+            self.calc_value = log(float(self.number), 10)
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'power e':
+            self.calc_value = exp(float(self.number))
+            self.entry.set(self.calc_value)
+        elif self.last_operator == 'ln':
+            self.calc_value = log(float(self.number), 10)
+            self.entry.set(self.calc_value)
         elif self.last_operator == '/':
-            pass
+            if self.number == '0':
+                self.entry.set('Error, division by zero')
+            else:
+                self.calc_value /= float(self.number)
+                self.entry.set(self.calc_value)
         elif self.last_operator == 'sqrt':
             try:
                 self.calc_value = sqrt(float(self.number))
                 self.entry.set(str(self.calc_value))
             except ValueError:
                 self.calc_value = ''
-                self.entry.set('Error, square root > 0')
+                self.entry.set('Error, cannot square root number < 0')
+        elif self.number != '':
+            self.calc_value = float(self.number)
 
     def remove_last_operator(self, operation):
         if operation == '10\u207F':
@@ -59,13 +86,19 @@ class Calculator:
     def add_operator(self, operator):
         if operator == 'nth root':
             if self.number == '':
-                return ''
+                return self.get_superscript_number('1') + '\u221A'
             else:
                 return self.remove_last_number() + self.get_superscript_number(self.number) + '\u221A'
         elif operator == 'sqrt':
             return self.entry.get() + '\u221A'
         elif operator == 'multiply':
             return self.entry.get() + '\u00D7'
+        elif operator == 'power':
+            return self.entry.get() + '^'
+        elif operator == 'power 10':
+            return self.entry.get() + '10^'
+        elif operator == 'power e':
+            return self.entry.get() + 'e^'
         else:
             return self.entry.get() + operator
 
@@ -73,22 +106,23 @@ class Calculator:
         return self.entry.get()[:-len(self.number)]
 
     def number_pressed(self, number):
+        entry_output = '' if self.equal_clicked else self.entry.get()
         if number == pi:
-            current_text = self.entry.get()
-            new_text = current_text[:-int(len(self.number))]
+            current_text = entry_output
+            new_text = current_text[:-len(self.number)]
             self.entry.set(new_text + str(pi))
             self.decimal_number = True
             self.number = str(pi)
         else:
             self.number = self.number + str(number)
-            self.entry.set(self.entry.get() + str(number))
+            self.entry.set(entry_output + str(number))
 
         if self.last_clicked == 'operator':
             self.last_clicked = 'number'
         print('{0}'.format(self.number))
 
     def operator_pressed(self, operation):
-        if self.last_clicked == 'operator':
+        if self.last_clicked == 'operator' and not self.equal_clicked:
             self.entry.set(self.remove_last_operator(self.last_operator) + self.add_operator(operation))
         else:
             self.calc_new_value()
@@ -96,11 +130,17 @@ class Calculator:
             self.last_clicked = 'operator'
         self.number = ''
         self.last_operator = operation
+        self.equal_clicked = False
         print('Operation Pressed {0}'.format(self.last_operator))
 
     def clear_pressed(self):
-        self.entry.set('')
+        self.calc_value = 0.0
+        self.last_operator = ''
+        self.number = ''
         self.decimal_number = False
+        self.last_clicked = ''
+        self.equal_clicked = False
+        self.entry.set('')
 
     def plus_minus(self):
         print('Plus Minus clicked')
@@ -115,21 +155,24 @@ class Calculator:
             self.decimal_number = True
 
     def equal_pressed(self):
-        print('equal pressed {0}'.format(self.last_operator))
         self.calc_new_value()
+        self.equal_clicked = True
 
     def back_space(self):
-        if len(self.entry.get()) > 0:
+        if self.equal_clicked:
+            self.clear_pressed()
+        elif len(self.entry.get()) > 0:
             self.entry.set(self.entry.get()[:-1])
+            if self.last_clicked == 'number':
+                self.number = self.number[:-1]
+            else:
+                self.last_clicked = 'number'
+                self.last_operator = ''
 
     def __init__(self, root):
         self.entry = StringVar(root, value='')
 
-        self.calc_value = 0.0
-        self.last_operator = ''
-        self.number = ''
-        self.decimal_number = False
-        self.last_clicked = ''
+        self.clear_pressed()
 
         root.title('Custom Calculator')
         root.resizable(width=False, height=False)
@@ -145,34 +188,34 @@ class Calculator:
 
         style.configure('TButton', font='Times 14', padding=5)
 
-        ttk.Button(root, text='\u232B', command=self.back_space).grid(row=0, column=4)
         ttk.Button(root, text='CE', command=self.clear_pressed).grid(row=0, column=0)
+        ttk.Button(root, text='\u232B', command=self.back_space).grid(row=0, column=4)
 
         ttk.Button(root, text='\u03C0', command=lambda: self.number_pressed(pi)).grid(row=1, column=0)
         ttk.Button(root, text='\u221A', command=lambda: self.operator_pressed('sqrt')).grid(row=1, column=1)
         ttk.Button(root, text='\u207F\u221A', command=lambda: self.operator_pressed('nth root')).grid(row=1, column=2)
-        ttk.Button(root, text='x\u207F', command=lambda: self.operator_pressed('x\u207F')).grid(row=1, column=3)
+        ttk.Button(root, text='x\u207F', command=lambda: self.operator_pressed('power')).grid(row=1, column=3)
         ttk.Button(root, text='/', command=lambda: self.operator_pressed('/')).grid(row=1, column=4)
 
-        ttk.Button(root, text='10\u207F', command=lambda: self.operator_pressed('10\u207F')).grid(row=2, column=0)
+        ttk.Button(root, text='10\u207F', command=lambda: self.operator_pressed('power 10')).grid(row=2, column=0)
         ttk.Button(root, text='7', command=lambda: self.number_pressed(7)).grid(row=2, column=1)
         ttk.Button(root, text='8', command=lambda: self.number_pressed(8)).grid(row=2, column=2)
         ttk.Button(root, text='9', command=lambda: self.number_pressed(9)).grid(row=2, column=3)
         ttk.Button(root, text='\u00D7', command=lambda: self.operator_pressed('multiply')).grid(row=2, column=4)
 
-        ttk.Button(root, text='\u33D2', command=lambda: self.operator_pressed('\u33D2')).grid(row=3, column=0)
+        ttk.Button(root, text='log', command=lambda: self.operator_pressed('log')).grid(row=3, column=0)
         ttk.Button(root, text='4', command=lambda: self.number_pressed(4)).grid(row=3, column=1)
         ttk.Button(root, text='5', command=lambda: self.number_pressed(5)).grid(row=3, column=2)
         ttk.Button(root, text='6', command=lambda: self.number_pressed(6)).grid(row=3, column=3)
         ttk.Button(root, text='-', command=lambda: self.operator_pressed('-')).grid(row=3, column=4)
 
-        ttk.Button(root, text='e\u207F', command=lambda: self.operator_pressed('e\u207F')).grid(row=4, column=0)
+        ttk.Button(root, text='e\u207F', command=lambda: self.operator_pressed('power e')).grid(row=4, column=0)
         ttk.Button(root, text='1', command=lambda: self.number_pressed(1)).grid(row=4, column=1)
         ttk.Button(root, text='2', command=lambda: self.number_pressed(2)).grid(row=4, column=2)
         ttk.Button(root, text='3', command=lambda: self.number_pressed(3)).grid(row=4, column=3)
         ttk.Button(root, text='+', command=lambda: self.operator_pressed('+')).grid(row=4, column=4)
 
-        ttk.Button(root, text='\u33D1', command=lambda: self.operator_pressed('\u33D1')).grid(row=5, column=0)
+        ttk.Button(root, text='ln', command=lambda: self.operator_pressed('ln')).grid(row=5, column=0)
         ttk.Button(root, text='\u00B1', command=self.plus_minus).grid(row=5, column=1)
         ttk.Button(root, text='0', command=lambda: self.number_pressed(0)).grid(row=5, column=2)
         ttk.Button(root, text='.', command=self.dot_pressed).grid(row=5, column=3)
