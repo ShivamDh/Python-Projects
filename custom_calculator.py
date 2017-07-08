@@ -155,8 +155,11 @@ class Calculator:
             self.decimal_number = True
 
     def equal_pressed(self):
+        calculation_string = self.entry.get()
         self.calc_new_value()
         self.equal_clicked = True
+        calculation_string += ' = ' + self.entry.get()
+        self.sidebar_history.add_calculation(calculation_string)
 
     def back_space(self):
         if self.equal_clicked:
@@ -168,6 +171,10 @@ class Calculator:
             else:
                 self.last_clicked = 'number'
                 self.last_operator = ''
+
+    def keyPressed(self, e):
+        print ("pressed key")
+        print("${0}".format(e.char))
 
     def __init__(self, root):
         self.entry = StringVar(root, value='')
@@ -181,45 +188,66 @@ class Calculator:
 
         style.configure('TLabel', font='Serif 11', padding=9)
 
-        self.entry_output = ttk.Label(root, width=41, textvariable=self.entry, anchor=W,
+        frame = Frame(root)
+        frame.bind("<Key>", self.keyPressed)
+
+        self.entry_output = ttk.Label(frame, width=41, textvariable=self.entry, anchor=W,
                                       background='white', borderwidth=1, relief=RIDGE)
 
         self.entry_output.grid(row=0, column=1, columnspan=3)
 
         style.configure('TButton', font='Times 14', padding=5)
 
-        ttk.Button(root, text='CE', command=self.clear_pressed).grid(row=0, column=0)
-        ttk.Button(root, text='\u232B', command=self.back_space).grid(row=0, column=4)
+        ttk.Button(frame, text='CE', command=self.clear_pressed).grid(row=0, column=0)
+        ttk.Button(frame, text='\u232B', command=self.back_space).grid(row=0, column=4)
 
-        ttk.Button(root, text='\u03C0', command=lambda: self.number_pressed(pi)).grid(row=1, column=0)
-        ttk.Button(root, text='\u221A', command=lambda: self.operator_pressed('sqrt')).grid(row=1, column=1)
-        ttk.Button(root, text='\u207F\u221A', command=lambda: self.operator_pressed('nth root')).grid(row=1, column=2)
-        ttk.Button(root, text='x\u207F', command=lambda: self.operator_pressed('power')).grid(row=1, column=3)
-        ttk.Button(root, text='/', command=lambda: self.operator_pressed('/')).grid(row=1, column=4)
+        ttk.Button(frame, text='\u03C0', command=lambda: self.number_pressed(pi)).grid(row=1, column=0)
+        ttk.Button(frame, text='\u221A', command=lambda: self.operator_pressed('sqrt')).grid(row=1, column=1)
+        ttk.Button(frame, text='\u207F\u221A', command=lambda: self.operator_pressed('nth root')).grid(row=1, column=2)
+        ttk.Button(frame, text='x\u207F', command=lambda: self.operator_pressed('power')).grid(row=1, column=3)
+        ttk.Button(frame, text='/', command=lambda: self.operator_pressed('/')).grid(row=1, column=4)
 
-        ttk.Button(root, text='10\u207F', command=lambda: self.operator_pressed('power 10')).grid(row=2, column=0)
-        ttk.Button(root, text='7', command=lambda: self.number_pressed(7)).grid(row=2, column=1)
-        ttk.Button(root, text='8', command=lambda: self.number_pressed(8)).grid(row=2, column=2)
-        ttk.Button(root, text='9', command=lambda: self.number_pressed(9)).grid(row=2, column=3)
-        ttk.Button(root, text='\u00D7', command=lambda: self.operator_pressed('multiply')).grid(row=2, column=4)
+        ttk.Button(frame, text='10\u207F', command=lambda: self.operator_pressed('power 10')).grid(row=2, column=0)
+        ttk.Button(frame, text='7', command=lambda: self.number_pressed(7)).grid(row=2, column=1)
+        ttk.Button(frame, text='8', command=lambda: self.number_pressed(8)).grid(row=2, column=2)
+        ttk.Button(frame, text='9', command=lambda: self.number_pressed(9)).grid(row=2, column=3)
+        ttk.Button(frame, text='\u00D7', command=lambda: self.operator_pressed('multiply')).grid(row=2, column=4)
 
-        ttk.Button(root, text='log', command=lambda: self.operator_pressed('log')).grid(row=3, column=0)
-        ttk.Button(root, text='4', command=lambda: self.number_pressed(4)).grid(row=3, column=1)
-        ttk.Button(root, text='5', command=lambda: self.number_pressed(5)).grid(row=3, column=2)
-        ttk.Button(root, text='6', command=lambda: self.number_pressed(6)).grid(row=3, column=3)
-        ttk.Button(root, text='-', command=lambda: self.operator_pressed('-')).grid(row=3, column=4)
+        ttk.Button(frame, text='log', command=lambda: self.operator_pressed('log')).grid(row=3, column=0)
+        ttk.Button(frame, text='4', command=lambda: self.number_pressed(4)).grid(row=3, column=1)
+        ttk.Button(frame, text='5', command=lambda: self.number_pressed(5)).grid(row=3, column=2)
+        ttk.Button(frame, text='6', command=lambda: self.number_pressed(6)).grid(row=3, column=3)
+        ttk.Button(frame, text='-', command=lambda: self.operator_pressed('-')).grid(row=3, column=4)
 
-        ttk.Button(root, text='e\u207F', command=lambda: self.operator_pressed('power e')).grid(row=4, column=0)
-        ttk.Button(root, text='1', command=lambda: self.number_pressed(1)).grid(row=4, column=1)
-        ttk.Button(root, text='2', command=lambda: self.number_pressed(2)).grid(row=4, column=2)
-        ttk.Button(root, text='3', command=lambda: self.number_pressed(3)).grid(row=4, column=3)
-        ttk.Button(root, text='+', command=lambda: self.operator_pressed('+')).grid(row=4, column=4)
+        ttk.Button(frame, text='e\u207F', command=lambda: self.operator_pressed('power e')).grid(row=4, column=0)
+        ttk.Button(frame, text='1', command=lambda: self.number_pressed(1)).grid(row=4, column=1)
+        ttk.Button(frame, text='2', command=lambda: self.number_pressed(2)).grid(row=4, column=2)
+        ttk.Button(frame, text='3', command=lambda: self.number_pressed(3)).grid(row=4, column=3)
+        ttk.Button(frame, text='+', command=lambda: self.operator_pressed('+')).grid(row=4, column=4)
 
-        ttk.Button(root, text='ln', command=lambda: self.operator_pressed('ln')).grid(row=5, column=0)
-        ttk.Button(root, text='\u00B1', command=self.plus_minus).grid(row=5, column=1)
-        ttk.Button(root, text='0', command=lambda: self.number_pressed(0)).grid(row=5, column=2)
-        ttk.Button(root, text='.', command=self.dot_pressed).grid(row=5, column=3)
-        ttk.Button(root, text='=', command=self.equal_pressed).grid(row=5, column=4)
+        ttk.Button(frame, text='ln', command=lambda: self.operator_pressed('ln')).grid(row=5, column=0)
+        ttk.Button(frame, text='\u00B1', command=self.plus_minus).grid(row=5, column=1)
+        ttk.Button(frame, text='0', command=lambda: self.number_pressed(0)).grid(row=5, column=2)
+        ttk.Button(frame, text='.', command=self.dot_pressed).grid(row=5, column=3)
+        ttk.Button(frame, text='=', command=self.equal_pressed).grid(row=5, column=4)
+
+        frame.grid(row=0, column=0)
+
+        label_frame = LabelFrame(root, text="Past Calculations", padx=1, pady=1)
+        label_frame.grid(row=0, column=1, sticky=N)
+
+        self.sidebar_history = PastCalculations(label_frame)
+
+class PastCalculations:
+
+    def add_calculation(self, text):
+        last_calculation = Label(self.labelFrame, width=25, text=text, background='white',
+                                 borderwidth=1, relief=RIDGE, wraplength=170, anchor=W)
+        last_calculation.grid(sticky=N)
+
+    def __init__(self, label_frame):
+        self.past_calculations = []
+        self.labelFrame = label_frame
 
 
 def sizeSmall():
