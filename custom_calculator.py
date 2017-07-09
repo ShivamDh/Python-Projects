@@ -4,6 +4,34 @@ from tkinter import ttk  # @Reimport
 
 
 class Calculator:
+
+    def __init__(self, root):
+        self.entry = StringVar(root, value='')
+
+        self.clear_pressed()
+
+        root.title('Custom Calculator')
+        root.resizable(width=False, height=False)
+
+        style = ttk.Style()
+        style.configure('TLabel', font='Serif 11', padding=9)
+        style.configure('TButton', font='Times 14', padding=5)
+
+        frame = Frame(root)
+
+        self.entry_output = ttk.Label(frame, width=41, textvariable=self.entry, anchor=W,
+                                      background='white', borderwidth=1, relief=RIDGE)
+        self.entry_output.grid(row=0, column=1, columnspan=3)
+
+        self.configure_all_buttons(frame)
+
+        frame.grid(row=0, column=0)
+
+        label_frame = LabelFrame(root, text="Past Calculations \n Click on Label to Use Value", padx=1, pady=1)
+        label_frame.grid(row=0, column=1, sticky=N)
+
+        self.sidebar_history = PastCalculations(label_frame, self.past_calculation_clicked)
+
     def get_superscript_number(self, number):
         if len(number) == 1:
             if number == '1':
@@ -88,7 +116,7 @@ class Calculator:
             if self.number == '':
                 return self.get_superscript_number('1') + '\u221A'
             else:
-                return self.remove_last_number() + self.get_superscript_number(self.number) + '\u221A'
+                return self.entry.get()[:-len(self.number)] + self.get_superscript_number(self.number) + '\u221A'
         elif operator == 'sqrt':
             return self.entry.get() + '\u221A'
         elif operator == 'multiply':
@@ -101,9 +129,6 @@ class Calculator:
             return self.entry.get() + 'e^'
         else:
             return self.entry.get() + operator
-
-    def remove_last_number(self):
-        return self.entry.get()[:-len(self.number)]
 
     def number_pressed(self, number):
         entry_output = '' if self.equal_clicked else self.entry.get()
@@ -120,6 +145,7 @@ class Calculator:
         if self.last_clicked == 'operator':
             self.last_clicked = 'number'
         print('{0}'.format(self.number))
+        self.equal_clicked = False
 
     def operator_pressed(self, operation):
         if self.last_clicked == 'operator' and not self.equal_clicked:
@@ -158,6 +184,10 @@ class Calculator:
         calculation_string = self.entry.get()
         self.calc_new_value()
         self.equal_clicked = True
+        self.last_operator = ''
+        self.number = ''
+        self.decimal_number = False
+        self.last_clicked = ''
         calculation_string += ' = ' + self.entry.get()
         self.sidebar_history.add_calculation(calculation_string)
 
@@ -172,32 +202,12 @@ class Calculator:
                 self.last_clicked = 'number'
                 self.last_operator = ''
 
-    def keyPressed(self, e):
-        print ("pressed key")
-        print("${0}".format(e.char))
+    def past_calculation_clicked(self, past_calc_string):
+        equal_index = past_calc_string.index('=')
+        past_calc_value = past_calc_string[equal_index+2:]
+        self.number_pressed(past_calc_value)
 
-    def __init__(self, root):
-        self.entry = StringVar(root, value='')
-
-        self.clear_pressed()
-
-        root.title('Custom Calculator')
-        root.resizable(width=False, height=False)
-
-        style = ttk.Style()
-
-        style.configure('TLabel', font='Serif 11', padding=9)
-
-        frame = Frame(root)
-        frame.bind("<Key>", self.keyPressed)
-
-        self.entry_output = ttk.Label(frame, width=41, textvariable=self.entry, anchor=W,
-                                      background='white', borderwidth=1, relief=RIDGE)
-
-        self.entry_output.grid(row=0, column=1, columnspan=3)
-
-        style.configure('TButton', font='Times 14', padding=5)
-
+    def configure_all_buttons(self, frame):
         ttk.Button(frame, text='CE', command=self.clear_pressed).grid(row=0, column=0)
         ttk.Button(frame, text='\u232B', command=self.back_space).grid(row=0, column=4)
 
@@ -231,23 +241,26 @@ class Calculator:
         ttk.Button(frame, text='.', command=self.dot_pressed).grid(row=5, column=3)
         ttk.Button(frame, text='=', command=self.equal_pressed).grid(row=5, column=4)
 
-        frame.grid(row=0, column=0)
-
-        label_frame = LabelFrame(root, text="Past Calculations", padx=1, pady=1)
-        label_frame.grid(row=0, column=1, sticky=N)
-
-        self.sidebar_history = PastCalculations(label_frame)
-
 class PastCalculations:
+
+    def __init__(self, label_frame, onPressFunc):
+        self.past_calculations = []
+        self.labelFrame = label_frame
+        self.onPressFunc = onPressFunc
 
     def add_calculation(self, text):
         last_calculation = Label(self.labelFrame, width=25, text=text, background='white',
                                  borderwidth=1, relief=RIDGE, wraplength=170, anchor=W)
-        last_calculation.grid(sticky=N)
-
-    def __init__(self, label_frame):
-        self.past_calculations = []
-        self.labelFrame = label_frame
+        last_calculation.bind("<Button-1>", lambda x: self.onPressFunc(last_calculation.cget('text')))
+        self.past_calculations.insert(0, last_calculation)
+        
+        lines_shown = 0
+        for index, calculation in enumerate(self.past_calculations):
+            lines_shown = lines_shown + 2 if len(calculation.cget('text')) > 29 else lines_shown + 1
+            if lines_shown > 10:
+                del calculation
+            else:
+                calculation.grid(row=index)
 
 
 def sizeSmall():
@@ -319,5 +332,4 @@ editMenu.add_command(label="Use Decimal Notation", command=useDecimalNotation)
 
 mainGUI.mainloop()
 
-# Will add history functionality to easily recall previously used numbers
 # Try and see if multiple calculators can be added on 1 GUI for user to control
