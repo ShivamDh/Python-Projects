@@ -6,18 +6,19 @@ from tkinter import ttk  # @Reimport
 class Calculator:
 
     def __init__(self, root):
-        self.entry = StringVar(root, value='')
+        self.root = root
+        self.entry = StringVar(self.root, value='')
 
         self.clear_pressed()
 
-        root.title('Custom Calculator')
-        root.resizable(width=False, height=False)
+        self.root.title('Custom Calculator')
+        self.root.resizable(width=False, height=False)
 
         style = ttk.Style()
         style.configure('TLabel', font='Serif 11', padding=9)
         style.configure('TButton', font='Times 14', padding=5)
 
-        frame = Frame(root)
+        frame = Frame(self.root)
 
         self.entry_output = ttk.Label(frame, width=41, textvariable=self.entry, anchor=W,
                                       background='white', borderwidth=1, relief=RIDGE)
@@ -27,10 +28,44 @@ class Calculator:
 
         frame.grid(row=0, column=0)
 
-        label_frame = LabelFrame(root, text="Past Calculations \n Click on Label to Use Value", padx=1, pady=1)
+        label_frame = LabelFrame(self.root, text="Past Calculations \n Click on Label to Use Value", padx=1, pady=1)
         label_frame.grid(row=0, column=1, sticky=N)
 
         self.sidebar_history = PastCalculations(label_frame, self.past_calculation_clicked)
+
+        self.top_menu = Menu(self.root)
+        self.root.config(menu=self.top_menu)
+
+        self.notation_type = 'scientific'
+
+        self.fileMenu = Menu(self.top_menu)
+        self.add_menus()
+
+    def add_menus(self):
+        self.top_menu.add_cascade(label="File", menu=self.fileMenu)
+        self.fileMenu.add_command(label="Text Small", command=lambda: self.change_text_size('10'))
+        self.fileMenu.add_command(label="Text Medium", command=lambda: self.change_text_size('11'))
+        self.fileMenu.add_command(label="Text Large", command=lambda: self.change_text_size('12'))
+
+        self.fileMenu.add_separator()
+        self.fileMenu.add_command(label="Delete History", command=self.sidebar_history.delete_history)
+        self.fileMenu.add_command(label="Quit", command=self.root.quit)
+
+        edit_menu = Menu(self.top_menu)
+        self.top_menu.add_cascade(label="Edit", menu=edit_menu)
+
+        edit_menu.add_command(label="Redo", command=self.redo_command)
+
+    def redo_command(self):
+        last_calc = self.sidebar_history.past_calculations[len(self.sidebar_history.past_calculations) - 1].cget('text')
+        equal_index = last_calc.find('=')
+        self.entry.set(last_calc[0:equal_index-1])
+        self.calc_value = float(last_calc[equal_index+2:])
+
+    def change_text_size(self, font_size):
+        text_style = 'Serif ' + font_size
+        style = ttk.Style()
+        style.configure('TLabel', font=text_style, padding=9)
 
     def get_superscript_number(self, number):
         if len(number) == 1:
@@ -61,6 +96,7 @@ class Calculator:
     def calc_new_value(self):
         print("in calc_new_value {0}".format(self.last_operator))
         if self.last_operator == '+':
+            print(self.number)
             self.calc_value += float(self.number)
             self.entry.set(self.calc_value)
         elif self.last_operator == '-':
@@ -241,19 +277,20 @@ class Calculator:
         ttk.Button(frame, text='.', command=self.dot_pressed).grid(row=5, column=3)
         ttk.Button(frame, text='=', command=self.equal_pressed).grid(row=5, column=4)
 
+
 class PastCalculations:
 
-    def __init__(self, label_frame, onPressFunc):
+    def __init__(self, label_frame, on_press_func):
         self.past_calculations = []
         self.labelFrame = label_frame
-        self.onPressFunc = onPressFunc
+        self.on_press_func = on_press_func
 
     def add_calculation(self, text):
         last_calculation = Label(self.labelFrame, width=25, text=text, background='white',
                                  borderwidth=1, relief=RIDGE, wraplength=170, anchor=W)
-        last_calculation.bind("<Button-1>", lambda x: self.onPressFunc(last_calculation.cget('text')))
+        last_calculation.bind("<Button-1>", lambda x: self.on_press_func(last_calculation.cget('text')))
         self.past_calculations.insert(0, last_calculation)
-        
+
         lines_shown = 0
         for index, calculation in enumerate(self.past_calculations):
             lines_shown = lines_shown + 2 if len(calculation.cget('text')) > 29 else lines_shown + 1
@@ -262,74 +299,13 @@ class PastCalculations:
             else:
                 calculation.grid(row=index)
 
-
-def sizeSmall():
-    print('Change size to small')
-
-
-def sizeMedium():
-    print('Change size to medium')
-
-
-def sizeLarge():
-    print('Change size to large')
-
-
-def delete_history():
-    print('Deleting history of calculator')
-
-
-def redo_command():
-    print('Redo Command')
-
-
-def changeToRadians():
-    print('Changing mode to radians')
-
-
-def changeToDegrees():
-    print('Changing mode to degrees')
-
-
-def useScientificNotation():
-    print('Using Scientific Notation')
-
-
-def useDecimalNotation():
-    print('Using Decimal Notation')
-
+    def delete_history(self):
+        for calculations in self.past_calculations:
+            calculations.destroy()
+        self.past_calculations = []
 
 mainGUI = Tk()
 
 mainFrame = Calculator(mainGUI)
 
-topMenu = Menu(mainGUI)
-mainGUI.config(menu=topMenu)
-
-fileMenu = Menu(topMenu)
-topMenu.add_cascade(label="File", menu=fileMenu)
-
-fileMenu.add_command(label="Size Small", command=sizeSmall)
-fileMenu.add_command(label="Size Medium", command=sizeMedium)
-fileMenu.add_command(label="Size Large", command=sizeLarge)
-
-fileMenu.add_separator()
-fileMenu.add_command(label="Delete History", command=delete_history)
-fileMenu.add_command(label="Quit", command=mainGUI.quit)
-
-editMenu = Menu(topMenu)
-topMenu.add_cascade(label="Edit", menu=editMenu)
-
-editMenu.add_command(label="Redo", command=redo_command)
-editMenu.add_separator()
-
-editMenu.add_command(label="Radian Mode", command=changeToRadians)
-editMenu.add_command(label="Degree Mode", command=changeToDegrees)
-editMenu.add_separator()
-
-editMenu.add_command(label="Use Scientific Notation", command=useScientificNotation)
-editMenu.add_command(label="Use Decimal Notation", command=useDecimalNotation)
-
 mainGUI.mainloop()
-
-# Try and see if multiple calculators can be added on 1 GUI for user to control
