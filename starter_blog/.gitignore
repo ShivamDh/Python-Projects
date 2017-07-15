@@ -17,5 +17,8 @@ lib64
 log/**
 starter_blog/settings.py
 
+.project
+.pydevproject
+
 .env
 db.sqlite3
