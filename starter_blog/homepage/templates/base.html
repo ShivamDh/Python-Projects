@@ -7,6 +7,7 @@
 	{% load staticfiles %}
 	
 	<link rel='stylesheet' href="{% static 'css/bootstrap.min.css' %}" type='text/css'/>
+	<link rel='stylesheet' href="{% static 'css/custom.css' %}" type='text/css'/>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name='viewport' content = 'width=device-width, initial-scale=1.0' />
 	
@@ -68,8 +69,50 @@
 	{% block content %}
 	{% endblock %}
 	
-	<div> 
-		Add Footer
+	<div class="footer-dark"> 
+		<footer>
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6 col-md-push-6 item text">
+						<h3> A Beginner's Blog </h3>
+						<p>
+							An easy to use blog template created by an up an coming website developer.
+							This template utilizes Django 1.1.13 along with Bootstrap 3.3.7 to produce
+							a clean and ready to use blog template
+						</p>
+					</div>
+					<div class="col-md-3 col-md-pull-6 col-sm-4 item">
+						<h3> Recent Blogs </h3>
+						<ul>
+							<li>
+								<a href="#"> Blog 1 </a>
+							</li>
+							<li>
+								<a href="#"> Blog 2 </a>
+							</li>
+							<li>
+								<a href="#"> Blog 3 </a>
+							</li>
+						</ul>
+					</div>
+					<div class="col-md-3 col-md-pull-6 col-sm-4 item">
+						<h3> Contact </h3>
+						<ul>
+							<li>
+								<a href="#"> Email </a>
+							</li>
+							<li>
+								<a href="#"> Facebook </a>
+							</li>
+							<li>
+								<a href="#"> Twitter </a>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<p class="copyright"> A Beginner's Blog © 2017 </p>
+			</div>
+		</footer>
 	</div>
 	
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
