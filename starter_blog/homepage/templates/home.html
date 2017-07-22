@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<p> To Use a Parallax Background along with a Simple Slider to display articles</p>
+{% load staticfiles %}
+<div class="homepage-background-image" style="background-image: url({% static 'img/home-wallpaper.jpg' %});">
+	<h1 class="homepage-image-title"> Blogs Made Easy </h1>
+</div>
 
 {% endblock %}
