@@ -9,10 +9,15 @@
 <div id="carousel-1" class="carousel slide" data-ride="carousel">
 	<div class="carousel-inner" role="listbox">
 		{% for blog_post in object_list %}
-			<div class="item {% if forloop.counter0 == 0 %} active {% endif %}">
-				<img src={% static blog_post.imgSrc %} class="homepage-carousel-image" alt="Slide Image" />
-				<div class="carousel-caption"> {{blog_post.summary}} </div>
-			</div>
+			{% if forloop.counter0 < 5 %}
+				<div class="item {% if forloop.counter0 == 0 %} active {% endif %}">
+					<a href="/blogs/{{forloop.revcounter}}">
+						<img src={% static blog_post.imgSrc %}
+							class="homepage-carousel-image" alt="Slide Image" />
+						<div class="carousel-caption"> {{blog_post.summary}} </div>
+					</a>
+				</div>
+			{% endif %}
 		{% endfor %}
 	</div>
 	<div>
@@ -27,8 +32,10 @@
 	</div>
 	<ol class="carousel-indicators">
 		{% for blog_post in object_list %}
-			<li data-target="#carousel-1" data-slide-to={{forloop.counter0}}
-				{% if forloop.counter0 == 0 %} class="active" {% endif %}> </li>
+			{% if forloop.counter0 < 5 %}
+				<li data-target="#carousel-1" data-slide-to={{forloop.counter0}}
+					{% if forloop.counter0 == 0 %} class="active" {% endif %}> </li>
+			{% endif %}
 		{% endfor %}
 	</ol>
 </div>
