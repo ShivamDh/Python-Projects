@@ -281,3 +281,26 @@
 	margin-top: calc(470px - 21.5%);
 	font-family: Raleway;
 }
+
+.carousel-inner {
+  position:relative;
+  width:100%;
+  overflow:hidden;
+}
+
+* {
+  -webkit-box-sizing:border-box;
+  -moz-box-sizing:border-box;
+  box-sizing:border-box;
+}
+
+.homepage-carousel-image {
+	width: 80%;
+	height: 500px !imporant;
+	margin-left: 10%;
+	margin-bottom: 5px;
+}
+
+.carousel-caption {
+	font-size: 16px;
+}
