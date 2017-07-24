@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	<h3> {{blog.title}} </h3>
+	<h5> Posted on: {{blog.date}} </h5>
+	
+	{{blog.body|safe|linebreaks}}
+	
+	{{blog.summary}}
+
+{% endblock %}
