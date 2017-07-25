@@ -6,7 +6,7 @@
 	<div class="article-list">
 		<div class="container">
 			<div class="intro">
-				<h2 class="text-center"> Latest </h2>
+				<h2 class="text-center"> Latest Blogs </h2>
 				<p class="text-center">
 					Have a look at some my latest blog posts and comment and let me know what you think!
 				</p>
@@ -14,12 +14,12 @@
 			<div class="row articles">
 				{% for blog_post in object_list %}
 					<div class="col-md-4 col-sm-6 item">
-						<a href="/blogs/{{forloop.counter}}">
+						<a href="/blogs/{{forloop.revcounter}}">
 							<img class="img-responsive" src={% static blog_post.imgSrc %} />
 						</a>
 						<h3 class="name"> {{blog_post.title}} </h3>
 						<p class="description"> {{blog_post.summary}} </p>
-						<a class="action" href="/blogs/{{forloop.counter}}">
+						<a class="action" href="/blogs/{{forloop.revcounter}}">
 							<i class="glyphicon glyphicon-circle-arrow-right"> </i>
 						</a>
 					</div>
