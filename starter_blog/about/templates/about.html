@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% load staticfiles %}
+
+	<div class="team-grid">
+		<div class="container">
+			<div class="intro">
+				<h2 class="text-center"> About Me </h2>
+				<p class="text-center">
+					Just a university student expanding his website development skills by learning new web frameworks
+					and developing web apps such as these to apply learned skills. I hope you enjoyed this little Django
+					blog template and get in touch with me if you ever want to reach out
+				</p>
+			</div>
+			<div class="row people" style="margin-bottom: 30px">
+				<div class="col-sm-4 col-md-4 item">
+					<div class="box" style="background-image: url({% static 'img/about-1.jpg' %});"> </div>
+				</div>
+				<div class="col-md-4 item">
+					<div class="box" style="background-image: url({% static 'img/about-2.jpg' %});"> </div>
+				</div>
+				<div class="col-md-4 item">
+					<div class="box" style="background-image: url({% static 'img/about-3.jpg' %});"> </div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
