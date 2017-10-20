@@ -12,14 +12,14 @@ date_1 = input('Enter the start date of the journey - DD/MM/YYYY: ')
 
 date_2 = ''
 
-if flight_type == 2:
+if flight_type == '2':
 	date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
 	
 csv_headers = 'Website, Start (' + start.upper() + '),'
 csv_headers += 'End (' + end.upper() + '),Duration' 
 
-if flight_type == 2:
-	csv_headers = 'Start (' + end.upper() + '),'
+if flight_type == '2':
+	csv_headers += ',Start (' + end.upper() + '),'
 	csv_headers += 'End (' + start.upper() + '),Duration'
 
 csv_headers += ',Price\n'
@@ -27,9 +27,9 @@ csv_headers += ',Price\n'
 f = open("flights.csv", "w")
 f.write(csv_headers)
 
-expedia_url = 'https://www.expedia.ca/Flights-Search?trip=oneway&leg1=from%3AJFK%2Cto%3ALAX%2Cdeparture%3A19%2F06%2F2018TANYT&passengers=adults%3A1%2Cchildren%3A0%2Cseniors%3A0%2Cinfantinlap%3AY&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
+expedia_url = 'https://www.expedia.ca/Flights-Search'
 
-if flight_type == 1:
+if flight_type == '1':
 	expedia_url += '?trip=oneway'
 else:
 	expedia_url += '?trip=roundtrip'
@@ -37,6 +37,10 @@ else:
 expedia_url += '&leg1=from%3A' + start + '%2Cto%3A' + end + '%2C'
 
 expedia_url += 'departure%3A' + date_1[0:2] + '%2F' + date_1[3:5] + '%2F' + date_1[6:10] + 'TANYT'
+
+if flight_type == '2':
+	expedia_url += '&leg2=from%3A' + end + '%2Cto%3A' + start + '%2C'
+	expedia_url += 'departure%3A' + date_2[0:2] + '%2F' + date_2[3:5] + '%2F' + date_2[6:10] + 'TANYT'
 
 expedia_url += '&passengers=adults%3A1&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
 
@@ -49,38 +53,49 @@ continued_results_divs = expedia_soup.find_all('div', {'id': 'originalContinuati
 if len(continued_results_divs) > 0:
 	expedia_results_id = continued_results_divs[0].text.strip()
 	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging'
-	expedia_results_url += '?c=' + continued_results_id
-	expedia_results_url += '&is=1&sp=asc&cz=200&cn=0'
+	expedia_results_url += '?c=' + expedia_results_id
+	expedia_results_url += '&is=1&sp=asc&cz=200&cn=0&ul=0'
 	
-	expedia_results_response = get(expedia_more_results_url)
+	expedia_results_response = get(expedia_results_url)
 	expedia_json = json.loads(expedia_results_response.text)
 	
 	flights = expedia_json['content']['legs']
 	flight_keys = list(flights)
 	
 	# send another Expedia request to gather second leg journeys
-	if flight_type == 2:
+	if flight_type == '2':
 		expedia_results_2_url = expedia_results_url.replace(
 			'is=1',
 			'is=0&fl0=' + flight_keys[0]
 		)
+		print(expedia_results_url)
+		print(expedia_results_2_url)
 		
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
+		
+		print(expedia_results_2_url)
 		
 		expedia_results_2_response = get(expedia_results_2_url)
 		expedia_2_json = json.loads(expedia_results_2_response.text)
 		
 		flights_2 = expedia_2_json['content']['legs']
-		flight_2_keys = list(flights_2)
-	
-	for flight in flight_keys:
-		start_time = flight['departureTime']['time']
-		end_time = flight['arrivalTime']['time']
 		
-		duration = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
-		price = flight['price']['formattedPrice']
+		print(len(flights_2))
 		
-		f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')
+		flights_2 = sorted(flights_2.items(), key=lambda x: x[1]['price']['exactPrice'])
+		flights_2 = flights_2[:10]
+		
+		flights = sorted(flights.items(), key=lambda x: x[1]['price']['exactPrice'])
+		flights = flights[:10]
+		
+		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
+		
+		for flight in flights:
+			
+		
+	else:
+		for flight in flights:
+			
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
