@@ -91,11 +91,37 @@ if len(continued_results_divs) > 0:
 		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
 		
 		for flight in flights:
+			start_time = flight[1]['departureTime']['time']
+			end_time = flight[1]['arrivalTime']['time']
 			
+			duration = str(flight[1]['duration']['hours']) + 'h ' + str(flight[1]['duration']['minutes']) + 'm'
+			price = flight[1]['price']['exactPrice']
+			
+			for flight_2 in flights_2:
+				start_time_2 = flight_2[1]['departureTime']['time']
+				end_time_2 = flight_2[1]['arrivalTime']['time']
+			
+				duration_2 = str(flight_2[1]['duration']['hours']) + 'h ' + str(flight_2[1]['duration']['minutes']) + 'm'
+				price_2 = flight_2[1]['price']['exactPrice']
+				
+				f.write('Expedia,' + start_time + ',' + end_time + ',' + duration)
+				f.write(',' + start_time_2 + ',' + end_time_2 + ',' + duration_2)
+				
+				price_2 += price - cheapest_first_leg_flight
+				
+				final_price = flight_2[1]['price']['formattedPrice'][0:2] + "{:,.2f}".format(float(price_2))
+				
+				f.write(',' + final_price + '\n')
 		
 	else:
 		for flight in flights:
+			start_time = flight['departureTime']['time']
+			end_time = flight['arrivalTime']['time']
 			
+			duration = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
+			price = flight['price']['formattedPrice']
+			
+			f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
