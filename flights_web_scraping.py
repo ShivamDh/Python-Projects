@@ -27,6 +27,10 @@ csv_headers += ',Price\n'
 f = open("flights.csv", "w")
 f.write(csv_headers)
 
+'''
+	Web scraping from Expedia
+'''
+
 expedia_url = 'https://www.expedia.ca/Flights-Search'
 
 if flight_type == '1':
@@ -68,19 +72,13 @@ if len(continued_results_divs) > 0:
 			'is=1',
 			'is=0&fl0=' + flight_keys[0]
 		)
-		print(expedia_results_url)
-		print(expedia_results_2_url)
 		
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
-		
-		print(expedia_results_2_url)
 		
 		expedia_results_2_response = get(expedia_results_2_url)
 		expedia_2_json = json.loads(expedia_results_2_response.text)
 		
 		flights_2 = expedia_2_json['content']['legs']
-		
-		print(len(flights_2))
 		
 		flights_2 = sorted(flights_2.items(), key=lambda x: x[1]['price']['exactPrice'])
 		flights_2 = flights_2[:10]
@@ -109,7 +107,7 @@ if len(continued_results_divs) > 0:
 				
 				price_2 += price - cheapest_first_leg_flight
 				
-				final_price = flight_2[1]['price']['formattedPrice'][0:2] + "{:,.2f}".format(float(price_2))
+				final_price = flight_2[1]['price']['formattedPrice'][0:2] + "{:.2f}".format(float(price_2))
 				
 				f.write(',' + final_price + '\n')
 		
@@ -119,7 +117,7 @@ if len(continued_results_divs) > 0:
 			end_time = flight['arrivalTime']['time']
 			
 			duration = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
-			price = flight['price']['formattedPrice']
+			price = flight['price']['formattedPrice'][0:2] + flight['price']['totalPriceAsDecimalString']
 			
 			f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')
 	
@@ -149,7 +147,11 @@ else:
 		if price_column_div is None:
 			price = ''
 		else:
-			price = price_column_div.div.findAll('span')[-1].text.strip() 
+			price_spans = price_column_div.div.findAll('span')
+			if len(price_spans) == 0:
+				price = ''
+			else:
+				price = price_spans[-1].text.strip().replace(',', '') 
 			
 		f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')	
 	
