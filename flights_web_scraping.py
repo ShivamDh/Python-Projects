@@ -15,12 +15,10 @@ date_2 = ''
 if flight_type == '2':
 	date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
 	
-csv_headers = 'Website, Start (' + start.upper() + '),'
-csv_headers += 'End (' + end.upper() + '),Duration' 
+csv_headers = 'Website,Start({0}),End({1}),Duration'.format(start.upper(), end.upper())
 
 if flight_type == '2':
-	csv_headers += ',Start (' + end.upper() + '),'
-	csv_headers += 'End (' + start.upper() + '),Duration'
+	csv_headers += ',Start ({0}),End({1}),Duration'.format(end.upper(), start.upper())
 
 csv_headers += ',Price\n'
 
@@ -38,13 +36,13 @@ if flight_type == '1':
 else:
 	expedia_url += '?trip=roundtrip'
 	
-expedia_url += '&leg1=from%3A' + start + '%2Cto%3A' + end + '%2C'
+expedia_url += '&leg1=from%3A{0}%2Cto%3A{1}%2C'.format(start, end)
 
-expedia_url += 'departure%3A' + date_1[0:2] + '%2F' + date_1[3:5] + '%2F' + date_1[6:10] + 'TANYT'
+expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_1[0:2], date_1[3:5], date_1[6:10])
 
 if flight_type == '2':
-	expedia_url += '&leg2=from%3A' + end + '%2Cto%3A' + start + '%2C'
-	expedia_url += 'departure%3A' + date_2[0:2] + '%2F' + date_2[3:5] + '%2F' + date_2[6:10] + 'TANYT'
+	expedia_url += '&leg2=from%3A{0}%2Cto%3A{1}%2C'.format(end, start)
+	expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_2[0:2], date_2[3:5], date_2[6:10])
 
 expedia_url += '&passengers=adults%3A1&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
 
@@ -56,9 +54,7 @@ continued_results_divs = expedia_soup.find_all('div', {'id': 'originalContinuati
 
 if len(continued_results_divs) > 0:
 	expedia_results_id = continued_results_divs[0].text.strip()
-	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging'
-	expedia_results_url += '?c=' + expedia_results_id
-	expedia_results_url += '&is=1&sp=asc&cz=200&cn=0&ul=0'
+	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging?c={0}&is=1&sp=asc&cz=200&cn=0&ul=0'.format(expedia_results_id)
 	
 	expedia_results_response = get(expedia_results_url)
 	expedia_json = json.loads(expedia_results_response.text)
@@ -112,12 +108,12 @@ if len(continued_results_divs) > 0:
 				f.write(',' + final_price + '\n')
 		
 	else:
-		for flight in flights:
-			start_time = flight['departureTime']['time']
-			end_time = flight['arrivalTime']['time']
+		for key in flights:
+			start_time = flights[key]['departureTime']['time']
+			end_time = flights[key]['arrivalTime']['time']
 			
-			duration = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
-			price = flight['price']['formattedPrice'][0:2] + flight['price']['totalPriceAsDecimalString']
+			duration = str(flights[key]['duration']['hours']) + 'h ' + str(flights[key]['duration']['minutes']) + 'm'
+			price = flights[key]['price']['formattedPrice'][0:2] + flights[key]['price']['totalPriceAsDecimalString']
 			
 			f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')
 	
@@ -155,6 +151,10 @@ else:
 			
 		f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')	
 	
+	
+	
+	
+
 
 f.close()
 	
