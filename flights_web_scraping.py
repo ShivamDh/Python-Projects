@@ -15,10 +15,10 @@ date_2 = ''
 if flight_type == '2':
 	date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
 	
-csv_headers = 'Website,Start({0}),End({1}),Duration'.format(start.upper(), end.upper())
+csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(start.upper(), end.upper())
 
 if flight_type == '2':
-	csv_headers += ',Start ({0}),End({1}),Duration'.format(end.upper(), start.upper())
+	csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(end.upper(), start.upper())
 
 csv_headers += ',Price\n'
 
@@ -89,23 +89,47 @@ if len(continued_results_divs) > 0:
 			end_time = flight[1]['arrivalTime']['time']
 			
 			duration = str(flight[1]['duration']['hours']) + 'h ' + str(flight[1]['duration']['minutes']) + 'm'
-			price = flight[1]['price']['exactPrice']
+			price = flight[1]['price']['formattedPrice'][0:2] + flight[1]['price']['totalPriceAsDecimalString']
+			
+			airline = flight[1]['carrierSummary']['airlineName']
+			if airline == '':
+				airline = 'Multiple Airlines'
+			
+			stops = flight[1]['formattedStops']
+			if stops == '0':
+				stops = 'Nonstop'
+			elif stops == '1':
+				stops += ' Stop'
+			else:
+				stops += ' Stops'
 			
 			for flight_2 in flights_2:
 				start_time_2 = flight_2[1]['departureTime']['time']
 				end_time_2 = flight_2[1]['arrivalTime']['time']
 			
 				duration_2 = str(flight_2[1]['duration']['hours']) + 'h ' + str(flight_2[1]['duration']['minutes']) + 'm'
-				price_2 = flight_2[1]['price']['exactPrice']
 				
-				f.write('Expedia,' + start_time + ',' + end_time + ',' + duration)
-				f.write(',' + start_time_2 + ',' + end_time_2 + ',' + duration_2)
+				airline_2 = flight_2[1]['carrierSummary']['airlineName']
+				if airline_2 == '':
+					airline_2 = 'Multiple Airlines'
 				
-				price_2 += price - cheapest_first_leg_flight
+				stops_2 = flight_2[1]['formattedStops']
+				if stops_2 == '0':
+					stops_2 = 'Nonstop'
+				elif stops_2 == '1':
+					stops_2 += ' Stop'
+				else:
+					stops_2 += ' Stops'
 				
+				f.write('Expedia,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}'.format(
+					airline, start_time, end_time, duration, stops,
+					airline_2, start_time_2, end_time_2, duration_2, stops_2
+				))
+				
+				price_2 = flight_2[1]['price']['exactPrice'] + flight[1]['price']['exactPrice'] - cheapest_first_leg_flight
 				final_price = flight_2[1]['price']['formattedPrice'][0:2] + "{:.2f}".format(float(price_2))
 				
-				f.write(',' + final_price + '\n')
+				f.write(',{0}\n'.format(final_price))
 		
 	else:
 		for key in flights:
@@ -115,7 +139,19 @@ if len(continued_results_divs) > 0:
 			duration = str(flights[key]['duration']['hours']) + 'h ' + str(flights[key]['duration']['minutes']) + 'm'
 			price = flights[key]['price']['formattedPrice'][0:2] + flights[key]['price']['totalPriceAsDecimalString']
 			
-			f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')
+			airline = flights[key]['carrierSummary']['airlineName']
+			if airline == '':
+				airline = 'Multiple Airlines'
+			
+			stops = flights[key]['formattedStops']
+			if stops == '0':
+				stops = 'Nonstop'
+			elif stops == '1':
+				stops += ' Stop'
+			else:
+				stops += ' Stops'
+			
+			f.write('Expedia,{0},{1},{2},{2},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
@@ -139,6 +175,18 @@ else:
 		else:
 			duration = duration_span.text.strip()
 		
+		airline_span = flight.find_next('div', {'data-test-id': 'airline-name'})
+		if airline_span is None:
+			airline = ''
+		else:
+			airline = airline_span.text.strip()
+			
+		stops_span = duration_span.find_next_sibling('span') 
+		if stops_span is None or not stops_span.has_attr('data-test-num-stops'):
+			stops = ''
+		else:
+			stops = stops_span.text.strip().replace('(', '').replace(')','')
+		
 		price_column_div = flight.find_next('div', {'data-test-id': 'price-column'})   
 		if price_column_div is None:
 			price = ''
@@ -147,9 +195,9 @@ else:
 			if len(price_spans) == 0:
 				price = ''
 			else:
-				price = price_spans[-1].text.strip().replace(',', '') 
+				price = price_spans[-1].text.strip().replace(',', '')
 			
-		f.write('Expedia,' + start_time + ',' + end_time + ',' + duration + ',' + price + '\n')	
+		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 	
 	
 	
