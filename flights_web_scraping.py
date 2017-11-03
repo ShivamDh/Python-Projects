@@ -1,4 +1,4 @@
-from requests import get
+from requests import get, post
 from bs4 import BeautifulSoup as soup
 import json
 
@@ -20,7 +20,7 @@ csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(start.
 if flight_type == '2':
 	csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(end.upper(), start.upper())
 
-csv_headers += ',Price\n'
+csv_headers += ',Price\n\n'
 
 f = open("flights.csv", "w")
 f.write(csv_headers)
@@ -198,11 +198,32 @@ else:
 				price = price_spans[-1].text.strip().replace(',', '')
 			
 		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+
+
+'''
+	Web scraping from Kayak
+'''
 	
-	
-	
-	
+kayak_home_url = 'https://www.kayak.com'
+# might use this to get cookies from Kayak
+
+kayak_search_url = kayak_home_url + '/s/horizon/flights/results/FlightSearchPoll'
+
+kayak_date_1 = date_1[6:10] + '-' + date_1[3:5] + '-' + date_1[0:2]
+
+kayak_url_to_append = 'flights/{0}-{1}/{2}'.format(start.upper(), end.upper(), kayak_date_1)
+
+if flight_type == '2':
+	kayak_date_2 = date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
+	kayak_url_to_append += '/' + kayak_date_2
+
+kayak_response = get(kayak_search_url)
+
+kayak_soup = soup(json.loads(kayak_response.text)['content'], 'html.parser')
+
+flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
+
 
 
 f.close()
-	
+
