@@ -205,7 +205,8 @@ else:
 '''
 	
 kayak_home_url = 'https://www.kayak.com'
-# might use this to get cookies from Kayak
+kayak_home_response = get(kayak_home_url)
+kayak_cookies = kayak_home_response.cookies
 
 kayak_search_url = kayak_home_url + '/s/horizon/flights/results/FlightSearchPoll'
 
@@ -217,13 +218,27 @@ if flight_type == '2':
 	kayak_date_2 = date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
 	kayak_url_to_append += '/' + kayak_date_2
 
-kayak_response = get(kayak_search_url)
+referer = kayak_home_url + '/' + kayak_url_to_append
+
+headers = {
+    'Host': 'www.kayak.com',
+    'User-Agent': 'Chrome/63 (Macintosh; Intel Mac OS X 10.11; rv:57.0) Gecko/20100101 Firefox/57.0',
+    'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': referer,
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'X-CSRF': 'kAqI1NgGh$DJnEUpiSDOWpdQXzlgAwG8EVOCd$gXO08-hpumC4oNpaOjz15GO_q9a5FdZPonpC2kF4CBYjEPh14',
+    'X-RequestId': 'flights#frontdoor#Ag$s9g',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+
+kayak_response = post(kayak_search_url, headers = headers, data = params, cookies = kayak_cookies)
 
 kayak_soup = soup(json.loads(kayak_response.text)['content'], 'html.parser')
 
 flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
 
-
+for flight in flights:
+	pass
 
 f.close()
-
