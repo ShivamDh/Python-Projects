@@ -222,14 +222,75 @@ referer = kayak_home_url + '/' + kayak_url_to_append
 
 headers = {
     'Host': 'www.kayak.com',
-    'User-Agent': 'Chrome/63 (Macintosh; Intel Mac OS X 10.11; rv:57.0) Gecko/20100101 Firefox/57.0',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
     'Accept': '*/*',
     'Accept-Language': 'en-US,en;q=0.9',
     'Referer': referer,
     'Content-Type': 'application/x-www-form-urlencoded',
-    'X-CSRF': 'kAqI1NgGh$DJnEUpiSDOWpdQXzlgAwG8EVOCd$gXO08-hpumC4oNpaOjz15GO_q9a5FdZPonpC2kF4CBYjEPh14',
-    'X-RequestId': 'flights#frontdoor#Ag$s9g',
     'X-Requested-With': 'XMLHttpRequest'
+}
+
+params = {
+    'searchId':'',
+    'poll':'true',
+    'pollNumber':'0',
+    'applyFilters':'true',
+    'filterState':'',
+    'useViewStateFilterState':'false',
+    'pageNumber':'1',
+    'append':'false',
+    'pollingId':'593601',  #interesting. explore further
+    'requestReason':'POLL',
+    'isSecondPhase':'false',
+    'textAndPageLocations':'bottom,right',
+    'displayAdPageLocations':'none',
+    'existingAds':'false',
+    'activeLeg':'-1',
+    'view':'list',
+    'renderPlusMinusThreeFlex':'false',
+    'renderAirlineStopsMatrix':'false',
+    'renderFlexHeader':'true',
+    'tab':'flights',
+    'pageOrigin':'F..FD..M0',
+    'src':'',
+    'searchingAgain':'',
+    'c2s':'',
+    'po':'',
+    'personality':'',
+    'provider':'',
+    'isMulticity':'false',
+    'flex_category':'exact',
+    'depart_date':kayak_date_1,
+    'return_date':kayak_date_2,
+    'oneway':'false',
+    'origincode':start.upper(),  #change accordingly
+    'origin':start.upper(), #change accordingly
+    'origin_location':'', #change accordingly
+    'origin_code':'', #change accordingly
+    'nearby_origin':'false',
+    'destination':end.upper(), #change accordingly
+    'destination_location':'', #change accordingly
+    'destination_code':end.upper(), #change accordingly
+    'nearby_destination':'false',
+    'countrySearch':'false',
+    'depart_date_canon':kayak_date_1, #change accordingly
+    'return_date_canon':kayak_date_2, #change accordingly
+    'travelers':'1',
+    'adults':'1',
+    'seniors':'0',
+    'youth':'0',
+    'child':'0',
+    'seatInfant':'0',
+    'lapInfant':'0',
+    'cabin':'e',
+    'cabinDisplayType':'Economy',
+    'vertical':'flights',
+    'url':kayak_url_to_append,
+    'id':'',
+    'navigateToResults':'false',
+    'ajaxts':'',
+    'scriptsMetadata':'',
+    'stylesMetadata':'',
 }
 
 kayak_response = post(kayak_search_url, headers = headers, data = params, cookies = kayak_cookies)
