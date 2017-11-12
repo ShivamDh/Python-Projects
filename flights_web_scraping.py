@@ -300,6 +300,57 @@ kayak_soup = soup(json.loads(kayak_response.text)['content'], 'html.parser')
 flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
 
 for flight in flights:
-	pass
+	start_time_divs = flight.find_all('div', {'class': 'depart'})
+	if len(start_time_divs) < 1:
+		start_time = ''
+	else:
+		start_time = start_time_divs[0].div.text.strip().replace('\n', '')
+		
+	end_time_divs = flight.find_all('div', {'class': 'return'})
+	if len(end_time_divs) < 1:
+		end_time = ''
+	else:
+		end_time = end_time_divs[0].div.text.strip().replace('\n', '')
+		
+	duration_divs = flight.find_all('div', {'class': 'duration'})
+	if len(duration_divs) < 1:
+		duration = ''
+	else:
+		duration = duration_divs[0].div.text.strip().replace('\n', '')
+
+	airline_divs = flight.find_all('div', {'class': 'carrier'})
+	if len(airline_divs) < 1:
+		airline = ''
+	else:
+		airline_inner_divs = airline_divs[0].find_all('div')
+		if len(airline_inner_divs) > 0:
+			airline = airline_inner_divs[-1].text.strip()
+		else:
+			airline = ''
+			
+	stops_divs = flight.find_all('div', {'class': 'stops'})
+	if len(stops_divs) < 1:
+		stops = ''
+	else:
+		stops_inner_spans = stops_divs[0].find_next('span', {'class': 'axis'})
+		if stops_inner_spans is None:
+			stops = ''
+		else:
+			num_stops = len(stops_inner_spans.find_all('span', {'class': 'dot'}))
+			if num_stops == 0:
+				stops = 'Nonstop'
+			elif num_stops == 1:
+				stops = '1 stop'
+			else:
+				stops = '{0} stops'.format(len(num_stops))
+	
+	price_spans = flight.find_next('span', {'class': 'price'})
+	if price_spans is None:
+		price = ''
+	else:
+		price = price_spans.text.strip()
+
+	f.write('Kayak,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+
 
 f.close()
