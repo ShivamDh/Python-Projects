@@ -306,18 +306,36 @@ for flight in flights:
 	else:
 		start_time = start_time_divs[0].div.text.strip().replace('\n', '')
 		
+	if flight_type == '2':
+		if len(start_time_divs) < 2:
+			start_time_2 = ''
+		else:
+			start_time_2 = start_time_divs[1].div.text.strip().replace('\n', '')
+
 	end_time_divs = flight.find_all('div', {'class': 'return'})
 	if len(end_time_divs) < 1:
 		end_time = ''
 	else:
 		end_time = end_time_divs[0].div.text.strip().replace('\n', '')
 		
+	if flight_type == '2':
+		if len(end_time_divs) < 2:
+			end_time_2 = ''
+		else:
+			end_time_2 = end_time_divs[1].div.text.strip().replace('\n', '')
+	
 	duration_divs = flight.find_all('div', {'class': 'duration'})
 	if len(duration_divs) < 1:
 		duration = ''
 	else:
 		duration = duration_divs[0].div.text.strip().replace('\n', '')
 
+	if flight_type == '2':
+		if len(duration_divs) < 2:
+			duration_2 = ''
+		else:
+			duration_2 = duration_divs[1].div.text.strip().replace('\n', '')
+		
 	airline_divs = flight.find_all('div', {'class': 'carrier'})
 	if len(airline_divs) < 1:
 		airline = ''
@@ -327,6 +345,16 @@ for flight in flights:
 			airline = airline_inner_divs[-1].text.strip()
 		else:
 			airline = ''
+			
+	if flight_type == '2':
+		if len(airline_divs) < 2:
+			airline_2 = ''
+		else:
+			airline_inner_divs_2 = airline_divs[1].find_all('div')
+			if len(airline_inner_divs_2) > 0:
+				airline_2 = airline_inner_divs_2[-1].text.strip()
+			else:
+				airline_2 = ''
 			
 	stops_divs = flight.find_all('div', {'class': 'stops'})
 	if len(stops_divs) < 1:
@@ -344,13 +372,34 @@ for flight in flights:
 			else:
 				stops = '{0} stops'.format(len(num_stops))
 	
+	if flight_type == '2':
+		if len(stops_divs) < 2:
+			stops_2 = ''
+		else:
+			stops_inner_spans_2 = stops_divs[0].find_next('span', {'class': 'axis'})
+			if stops_inner_spans_2 is None:
+				stops_2 = ''
+			else:
+				num_stops_2 = len(stops_inner_spans_2.find_all('span', {'class': 'dot'}))
+				if num_stops_2 == 0:
+					stops_2 = 'Nonstop'
+				elif num_stops == 1:
+					stops_2 = '1 stop'
+				else:
+					stops_2 = '{0} stops'.format(len(num_stops))
+
 	price_spans = flight.find_next('span', {'class': 'price'})
 	if price_spans is None:
 		price = ''
 	else:
 		price = price_spans.text.strip()
 
-	f.write('Kayak,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+	f.write('Kayak,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	
+	if flight_type == '2':
+		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
+		
+	f.write(',{0}\n'.format(price))
 
 
 f.close()
