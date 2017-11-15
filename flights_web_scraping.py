@@ -1,6 +1,8 @@
 from requests import get, post
 from bs4 import BeautifulSoup as soup
 import json
+import time
+from urllib.parse import quote
 
 flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
 
@@ -199,11 +201,11 @@ else:
 			
 		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 
-
+		
 '''
 	Web scraping from Kayak
 '''
-	
+
 kayak_home_url = 'https://www.kayak.com'
 kayak_home_response = get(kayak_home_url)
 kayak_cookies = kayak_home_response.cookies
@@ -401,5 +403,47 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 
+
+'''
+	Web scraping from FlightNetwork
+'''
+
+flightnetwork_home_url = 'https://www.flightnetwork.com/'
+flightnetwork_response = get(flightnetwork_home_url)
+flightnetwork_cookies = flightnetwork_response.cookies
+
+header = {
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+	'Referer': flightnetwork_home_url,
+	'Host': 'www.flightnetwork.com',
+	'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+	'Accept-Encoding': 'gzip, deflate, br'
+}
+
+flight_legs = '[{"date":"{'+date_1[6:10]+'-'+date_1[3:5]+'-'+date_1[0:2]+'","destination":"'+end.upper()+'","origin":"'+start.upper()+'"}]'
+
+if flight_type == '2':
+	flight_legs = flight_legs[0:-1] + ',{"date":"{' + date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2] + '",'
+	flight_legs += '"destination":"' + start.upper() + '","origin":"' + end.upper() + '"}]'
+
+referer_search = '{\
+	"tripType":"oneway",\
+	"cabinClass":"economy",\
+	"stopsFilter":[],\
+	"legs":' + flight_legs + ',\
+	"passengers":{"adults":1,"children":0,"infants":0},\
+	"currency":{"code":"CAD"}\
+}'
+
+referer_search = referer_search.replace('\t', '')
+
+referer = flightnetwork_home_url + 'en-CA/search?filter=' + quote(referer_search)
+
+flightnetwork_search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
+
+flightnetwork_search_url = flightnetwork_home_url + 'en-CA/api/flights/search/async?filter=' + quote(flightnetwork_search)
+flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
+flightnetwork_search_resp_json = json.loads(flightnetwork_search_resp.text)
 
 f.close()
