@@ -496,6 +496,26 @@ for flight in flights:
 	
 	duration_time = flight['legs'][0]['duration']
 	duration = '{0}h {1}m'.format(int(duration_time/60), duration_time%60)
+	
+	segments = flight['legs'][0]['segments']
+	one_airline = all(segment['marketing']['code'] == segments[0]['marketing']['code'] for segment in segments)
+	
+	if one_airline:
+		airline = segments[0]['marketing']['name']
+	else:
+		airline = 'Multiple Airlines'
+	
+	nu	m_stops = len(segments) - 1
+	if num_stops == 0:
+		stops = 'Nonstop'
+	elif num_stops == 1:
+		stops = '1 stop'
+	else:
+		stops = '{0} stops'.format(num_stops)
+	
+	price = flight['fare']['currency']['code'] + str(flight['fare']['total'])
+		
+	f.write('FlightNetwork,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops,price))
 		
 
 f.close()
