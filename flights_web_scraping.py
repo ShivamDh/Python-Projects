@@ -446,4 +446,33 @@ flightnetwork_search_url = flightnetwork_home_url + 'en-CA/api/flights/search/as
 flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
 flightnetwork_search_resp_json = json.loads(flightnetwork_search_resp.text)
 
+i = 0
+
+while 'errors' in flightnetwork_search_resp_json:
+	i += 1
+	flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
+	flightnetwork_search_resp_json = json.loads(flightnetwork_search_resp.text)
+	
+	if i >= 5:
+		f.close()
+		exit()
+		
+header2 = {
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+	'Referer': referer,
+	'Host': 'www.flightnetwork.com',
+	'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+	'Accept-Encoding': 'gzip, deflate, br',
+	'Connection': 'keep-alive'
+}
+
+url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
+	flightnetwork_search_resp_json['id'],
+	round(time.time()*1000)
+)
+
+resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
+resp2_json = json.loads(resp2.text)
+
 f.close()
