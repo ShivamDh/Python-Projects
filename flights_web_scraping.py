@@ -475,4 +475,27 @@ url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&li
 resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
 resp2_json = json.loads(resp2.text)
 
+i = 0
+
+while resp2_json['status'] == 'InProgress' :
+	time.sleep(2)
+	i += 1
+	resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
+	resp2_json = json.loads(resp2.text)
+	
+	# limit re-querying to 7 times (around 14+ sec delay)
+	# also break if over 100 results found already
+	if i >= 7 or len(resp2_json['itineraries']) > 100:
+		break
+		
+flights = resp2_json['itineraries'][0:100]
+
+for flight in flights:
+	start_time = flight['legs'][0]['departureTime']
+	end_time = flight['legs'][0]['arrivalTime']
+	
+	duration_time = flight['legs'][0]['duration']
+	duration = '{0}h {1}m'.format(int(duration_time/60), duration_time%60)
+		
+
 f.close()
