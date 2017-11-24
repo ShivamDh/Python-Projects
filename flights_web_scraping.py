@@ -505,7 +505,7 @@ for flight in flights:
 	else:
 		airline = 'Multiple Airlines'
 	
-	nu	m_stops = len(segments) - 1
+	num_stops = len(segments) - 1
 	if num_stops == 0:
 		stops = 'Nonstop'
 	elif num_stops == 1:
@@ -514,8 +514,36 @@ for flight in flights:
 		stops = '{0} stops'.format(num_stops)
 	
 	price = flight['fare']['currency']['code'] + str(flight['fare']['total'])
+	
+	if flight_type == '2':
+		start_time_2 = flight['legs'][1]['departureTime']
+		end_time_2 = flight['legs'][1]['arrivalTime']
+
+		duration_time_2 = flight['legs'][1]['duration']
+		duration_2 = '{0}h {1}m'.format(int(duration_time_2/60), duration_time_2%60)
 		
-	f.write('FlightNetwork,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops,price))
+		segments_2 = flight['legs'][1]['segments']
+		one_airline_2 = all(segment_2['marketing']['code'] == segments_2[0]['marketing']['code'] for segment_2 in segments_2)
+		
+		if one_airline_2:
+			airline_2 = segments_2[0]['marketing']['name']
+		else:
+			airline_2 = 'Multiple Airlines'
+			
+		num_stops_2 = len(segments_2) - 1
+		if num_stops_2 == 0:
+			stops_2 = 'Nonstop'
+		elif num_stops_2 == 1:
+			stops_2 = '1 stop'
+		else:
+			stops_2 = '{0} stops'.format(num_stops_2)
+		
+	f.write('FlightNetwork,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	
+	if flight_type == '2':
+		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
+		
+	f.write(',{0}\n'.format(price))
 		
 
 f.close()
