@@ -30,7 +30,7 @@ f.write(csv_headers)
 '''
 	Web scraping from Expedia
 '''
-
+'''
 expedia_url = 'https://www.expedia.ca/Flights-Search'
 
 if flight_type == '1':
@@ -201,11 +201,11 @@ else:
 			
 		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 
-		
+'''		
 '''
 	Web scraping from Kayak
 '''
-
+'''
 kayak_home_url = 'https://www.kayak.com'
 kayak_home_response = get(kayak_home_url)
 kayak_cookies = kayak_home_response.cookies
@@ -403,11 +403,11 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 
-
+'''
 '''
 	Web scraping from FlightNetwork
 '''
-
+'''
 flightnetwork_home_url = 'https://www.flightnetwork.com/'
 flightnetwork_response = get(flightnetwork_home_url)
 flightnetwork_cookies = flightnetwork_response.cookies
@@ -545,5 +545,30 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 		
+'''
+
+flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&departure={0}&destination={1}'.format(
+	start.upper(), end.upper()
+)
+
+departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
+
+if flight_type == '2':
+	returnDate = date_2[6:10] + date_2[3:5] + date_2[0:2]
+else:
+	return_date = departure_date
+
+flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&searchtype=RE'.format(
+	departure_date, return_date, 'OW' if flight_type == '1' else 'RE'
+)
+
+flightcenter_response = get(flightcenter_url)
+
+flightcenter_soup = soup(flightcenter_response, 'html.parser')
+
+flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
+
+for flight in flights:
+	pass
 
 f.close()
