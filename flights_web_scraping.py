@@ -554,7 +554,7 @@ flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&d
 departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
 
 if flight_type == '2':
-	returnDate = date_2[6:10] + date_2[3:5] + date_2[0:2]
+	return_date = date_2[6:10] + date_2[3:5] + date_2[0:2]
 else:
 	return_date = departure_date
 
@@ -574,14 +574,14 @@ airline_keys = {}
 
 if len(airline_filter) > 0:
 	airline_filter_legend = airline_filter[0].find_next_sibling('div')
-	airline_labels = airline_filter_legend .find_all('label') 
+	airline_labels = airline_filter_legend.find_all('label') 
 	
 	for label in airline_labels:
 		airline_keys[label.input['value']] = label.text.strip()
 	
 
 for flight in flights:
-	bold_texts = flight2.find_all('strong')
+	bold_texts = flight.find_all('strong')
 	
 	start_time = bold_texts[8].text.strip()
 	end_time = bold_texts[9].text.strip()
@@ -593,13 +593,29 @@ for flight in flights:
 	airline_key = flight.find_next('img')['alt']
 	airline = airline_keys[airline_key]
 	
-	f.write('FlightCentre,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
-	
 	if flight_type == '2':
-		pass
-		# need to sen an api request to get all possible return legs
-	
-	f.write('{0}\n'.format(price))
+		form = flight.find_next('form')
+		inputs = form.find_all('input')
+		flightcenter_url_2 = 'https://www.flightcentre.ca/flights/booking/inbound'
+		
+		params = {}
+		
+		for input in inputs:
+			params[input['name']] = input['value']
+		
+		flightcenter_response_2 = post(flightcenter_url_2, data = params)
+		
+		flightcenter_soup_2 = soup(flightcenter_response_2.text, 'html.parser')
+
+		flights_2 = flightcenter_soup_2.find_all('div', {'class': 'outboundOffer'})
+		
+		# ignore the first one, which is the chosen departure flight
+		flights_2 = flights_2[1:]
+
+		for flight_2 in flights_2:
+			# same as above
+			pass
+		
 	
 
 f.close()
