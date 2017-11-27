@@ -564,11 +564,42 @@ flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&sear
 
 flightcenter_response = get(flightcenter_url)
 
-flightcenter_soup = soup(flightcenter_response, 'html.parser')
+flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
 
+airline_filter = flightcenter_soup.find_all('div', {'class': 'flightFilterHeader'}, string='Airlines')
+
+airline_keys = {}
+
+if len(airline_filter) > 0:
+	airline_filter_legend = airline_filter[0].find_next_sibling('div')
+	airline_labels = airline_filter_legend .find_all('label') 
+	
+	for label in airline_labels:
+		airline_keys[label.input['value']] = label.text.strip()
+	
+
 for flight in flights:
-	pass
+	bold_texts = flight2.find_all('strong')
+	
+	start_time = bold_texts[8].text.strip()
+	end_time = bold_texts[9].text.strip()
+	
+	duration = bold_texts[3].text.strip()
+	stops = bold_texts[2].text.strip()
+	price = bold_texts[4].text.strip()
+	
+	airline_key = flight.find_next('img')['alt']
+	airline = airline_keys[airline_key]
+	
+	f.write('FlightCentre,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	
+	if flight_type == '2':
+		pass
+		# need to sen an api request to get all possible return legs
+	
+	f.write('{0}\n'.format(price))
+	
 
 f.close()
