@@ -30,7 +30,7 @@ f.write(csv_headers)
 '''
 	Web scraping from Expedia
 '''
-'''
+
 expedia_url = 'https://www.expedia.ca/Flights-Search'
 
 if flight_type == '1':
@@ -201,11 +201,11 @@ else:
 			
 		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 
-'''		
+
 '''
 	Web scraping from Kayak
 '''
-'''
+
 kayak_home_url = 'https://www.kayak.com'
 kayak_home_response = get(kayak_home_url)
 kayak_cookies = kayak_home_response.cookies
@@ -403,11 +403,11 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 
-'''
+
 '''
 	Web scraping from FlightNetwork
 '''
-'''
+
 flightnetwork_home_url = 'https://www.flightnetwork.com/'
 flightnetwork_response = get(flightnetwork_home_url)
 flightnetwork_cookies = flightnetwork_response.cookies
@@ -545,7 +545,7 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 		
-'''
+
 
 flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&departure={0}&destination={1}'.format(
 	start.upper(), end.upper()
@@ -612,10 +612,32 @@ for flight in flights:
 		# ignore the first one, which is the chosen departure flight
 		flights_2 = flights_2[1:]
 
-		for flight_2 in flights_2:
-			# same as above
-			pass
+		airline_filter_2 = flightcenter_soup.find_all('div', {'class': 'flightFilterHeader'}, string='Airlines')
+
+		if len(airline_filter_2) > 0:
+			airline_filter_legend_2 = airline_filter_2[0].find_next_sibling('div')
+			airline_labels_2 = airline_filter_legend_2.find_all('label') 
+			
+			for label_2 in airline_labels_2:
+				airline_keys[label_2.input['value']] = label_2.text.strip()
 		
-	
+		for flight_2 in flights_2:
+			bold_texts_2 = flight_2.find_all('strong')
+			
+			start_time_2 = bold_texts_2[8].text.strip()
+			end_time_2 = bold_texts_2[9].text.strip()
+			
+			duration_2 = bold_texts_2[3].text.strip()
+			stops_2 = bold_texts_2[2].text.strip()
+			price_2 = bold_texts_2[4].text.strip()
+			
+			airline_key_2 = flight_2.find_next('img')['alt']
+			airline_2 = airline_keys[airline_key_2]
+			
+			f.write('FlightCentre,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
+				airline, start_time, end_time, duration, stops,
+				airline_2, start_time_2, end_time_2, duration_2, stops_2,
+				price
+			))
 
 f.close()
