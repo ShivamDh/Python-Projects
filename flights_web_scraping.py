@@ -546,6 +546,9 @@ for flight in flights:
 	f.write(',{0}\n'.format(price))
 		
 
+'''
+	Web scraping from FlightCentre'
+'''
 
 flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&departure={0}&destination={1}'.format(
 	start.upper(), end.upper()
@@ -639,5 +642,39 @@ for flight in flights:
 				airline_2, start_time_2, end_time_2, duration_2, stops_2,
 				price
 			))
+		
+'''
+	Web scraping from Kiwi
+'''
+
+kiwi_url = 'https://api.skypicker.com/flights?adults=1&asc=1&flyFrom={0}&to={1}&sort=price'.format(
+	start.upper(), end.upper()
+)
+
+kiwi_url += '&dateFrom={0}%2F{1}%2F{2}&dateTo={0}%2F{1}%2F{2}'.format(
+	date_1[0:2], date_1[3:5], date_1[6:10]
+)
+
+if flight_type == '1':
+	kiwi_url += '&typeFlight=oneway'
+else:
+	kiwi_url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
+		date_2[0:2], date_2[3:5], date_2[6:10]
+	)
+
+kiwi_response = get(kiwi_url)
+
+kiwi_response_json = json.loads(kiwi_response.text)
+
+flights = kiwi_response_json['data']
+
+
+currency = kiwi_response_json['currency']
+
+
+# FInd an API for changing current currency to new one	
+
+
+
 
 f.close()
