@@ -667,14 +667,31 @@ kiwi_response = get(kiwi_url)
 kiwi_response_json = json.loads(kiwi_response.text)
 
 flights = kiwi_response_json['data']
-
-
 currency = kiwi_response_json['currency']
 
+currency_conversion = '{}_CAD'.format(currency.upper())
+currency_exchange_url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(currency_conversion)
 
-# FInd an API for changing current currency to new one	
+currency_exchange_response = get(currency_exchange_url)
 
+currency_exchange_json = json.loads(currency_exchange_response.text)
+exchange_rate = currency_exchange_json[currency_conversion]['val']
 
-
+for flight in flights:
+	start_time_struct = time.gmtime(flight['dTime'])
+	start_time = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
+	
+	end_time_struct = time.gmtime(flight['aTime'])
+	end_time = '{0}h {1}m'.format(end_time_struct.tm_hour, end_time_struct.tm_min)
+	
+	duration = flight['fly_duration']
+	
+	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
+	departure_flights_len = len(departure_flights)
+	
+	price_number = flight['price']*exchange_rate
+	
+	price = 'CAD$' + "{:.2f}".format(float(price_number))
+	
 
 f.close()
