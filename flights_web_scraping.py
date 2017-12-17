@@ -677,6 +677,23 @@ currency_exchange_response = get(currency_exchange_url)
 currency_exchange_json = json.loads(currency_exchange_response.text)
 exchange_rate = currency_exchange_json[currency_conversion]['val']
 
+airline_code_search_params = {
+	'name': '',
+	'alias': '',
+	'iata': '',
+	'icao': '',
+	'country': 'ALL',
+	'callsign': '',
+	'mode': 'F',
+	'active': '',
+	'offset': '0',
+	'iatafilter': 'true',
+	'alid': '',
+	'action': 'SEARCH'
+}
+
+airline_code_search_url = 'https://openflights.org/php/alsearch.php'
+
 for flight in flights:
 	start_time_struct = time.gmtime(flight['dTime'])
 	start_time = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
@@ -689,8 +706,21 @@ for flight in flights:
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
 	departure_flights_len = len(departure_flights)
 	
-	price_number = flight['price']*exchange_rate
+	if len(flight['airlines']) > 1:
+		airline = 'Multiple Airlines'
+	else:
+		airline_code_search_params['iata'] = flight['airlines'][0]
+		
+		airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+		
+		new_line = airline_code_search_response.text.find('\n')
+		airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+		
+		airline = airline_code_json['name']
 	
+	
+	price_number = flight['price']*exchange_rate
+
 	price = 'CAD$' + "{:.2f}".format(float(price_number))
 	
 
