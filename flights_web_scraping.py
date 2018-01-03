@@ -706,22 +706,53 @@ for flight in flights:
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
 	departure_flights_len = len(departure_flights)
 	
-	if len(flight['airlines']) > 1:
-		airline = 'Multiple Airlines'
+	return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
+	return_flights_len = len(return_flights)
+	
+	if departure_flights_len == 0:
+		stops = 'Nonstop'
+	elif departure_flights_len == 1:
+		stops = '1 stop'
 	else:
-		airline_code_search_params['iata'] = flight['airlines'][0]
+		stops = '{0} stops'.format(departure_flights_len)
+	
+	
+	if flight_type == '1':
+		if len(flight['airlines']) > 1:
+			airline = 'Multiple Airlines'
+		else:
+			airline_code_search_params['iata'] = flight['airlines'][0]
+			
+			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+			
+			new_line = airline_code_search_response.text.find('\n')
+			airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+			
+			airline = airline_code_json['name']
+	
+	else:
+		return_flights_routes = [x for x in flight['route'] if x['return'] == 1]
 		
-		airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+		start_time_2_struct = time.gmtime(return_flights_routes[0]['dTime'])
+		start_time_2 = '{0}h {1}m'.format(start_time_2_struct.tm_hour, start_time_2_struct.tm_min)
 		
-		new_line = airline_code_search_response.text.find('\n')
-		airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+		end_time_2_struct = time.gmtime(return_flights_routes[-1]['aTime'])
+		end_time_2 = '{0}h {1}m'.format(end_time_2_struct.tm_hour, end_time_2_struct.tm_min)
 		
-		airline = airline_code_json['name']
+		duration_2 = flight['return_duration']
+		
+		if return_flights_len == 0:
+			stops_2 = 'Nonstop'
+		elif return_flights_len == 1:
+			stops_2 = '1 stop'
+		else:
+			stops_2 = '{0} stops'.format(return_flights_len)
 	
 	
 	price_number = flight['price']*exchange_rate
-
+	
 	price = 'CAD$' + "{:.2f}".format(float(price_number))
+	
 	
 
 f.close()
