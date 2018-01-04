@@ -748,10 +748,42 @@ for flight in flights:
 		else:
 			stops_2 = '{0} stops'.format(return_flights_len)
 	
+		
+		if len(departure_flights) > 1:
+			airline = 'Multiple Airlines'
+		else:
+			airline_code_search_params['iata'] = next(iter(departure_flights))
+			
+			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+			
+			new_line = airline_code_search_response.text.find('\n')
+			airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+			
+			airline = airline_code_json['name']
+			
+		if len(return_flights) > 1:
+			airline_2 = 'Multiple Airlines'
+		else:
+			airline_code_search_params['iata'] = next(iter(departure_flights))
+			
+			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+			
+			new_line = airline_code_search_response.text.find('\n')
+			airline_code_json_2 = json.loads(airline_code_search_response.text[new_line + 1:])
+			
+			airline_2 = airline_code_json['name']
+
 	
 	price_number = flight['price']*exchange_rate
 	
 	price = 'CAD$' + "{:.2f}".format(float(price_number))
+	
+	f.write('Kiwi,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
+		airline, start_time, end_time, duration, stops,
+		airline_2, start_time_2, end_time_2, duration_2, stops_2,
+		price
+	))
+
 	
 	
 
