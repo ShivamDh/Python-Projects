@@ -1,22 +1,37 @@
 from requests import get, post
 from bs4 import BeautifulSoup as soup
-import json
+from json import loads
 import time
-from urllib.parse import quote
+from urllib.parse import quote #used to url encode and replace characters with %xx escape
 
-flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
-
-start = input('Enter the 3 digit airport code of the starting location: ')
-
-end = input('Enter the 3 digit airport code of the ending location: ')
-
-date_1 = input('Enter the start date of the journey - DD/MM/YYYY: ')
-
+flight_type = ''
+start = ''
+end = ''
+date_1 = ''
 date_2 = ''
 
-if flight_type == '2':
-	date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
+# Open CSV file to be used when writing all results
+f = open("flights.csv", "w")
+
+def get_user_input():
+	flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
+
+	start = input('Enter the 3 digit airport code of the starting location: ')
+	end = input('Enter the 3 digit airport code of the ending location: ')
+
+	date_1 = input('Enter the start date of the journey - DD/MM/YYYY: ')
 	
+	# Only ask user input for a second date if a return trip is chosen
+	if flight_type == '2':
+		date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
+	
+
+	
+	
+###############################################################################
+	
+get_user_input()
+
 csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(start.upper(), end.upper())
 
 if flight_type == '2':
@@ -24,7 +39,6 @@ if flight_type == '2':
 
 csv_headers += ',Price\n\n'
 
-f = open("flights.csv", "w")
 f.write(csv_headers)
 
 '''
@@ -59,7 +73,7 @@ if len(continued_results_divs) > 0:
 	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging?c={0}&is=1&sp=asc&cz=200&cn=0&ul=0'.format(expedia_results_id)
 	
 	expedia_results_response = get(expedia_results_url)
-	expedia_json = json.loads(expedia_results_response.text)
+	expedia_json = loads(expedia_results_response.text)
 	
 	flights = expedia_json['content']['legs']
 	flight_keys = list(flights)
@@ -74,7 +88,7 @@ if len(continued_results_divs) > 0:
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
 		
 		expedia_results_2_response = get(expedia_results_2_url)
-		expedia_2_json = json.loads(expedia_results_2_response.text)
+		expedia_2_json = loads(expedia_results_2_response.text)
 		
 		flights_2 = expedia_2_json['content']['legs']
 		
@@ -297,7 +311,9 @@ params = {
 
 kayak_response = post(kayak_search_url, headers = headers, data = params, cookies = kayak_cookies)
 
-kayak_soup = soup(json.loads(kayak_response.text)['content'], 'html.parser')
+kayak_json = loads(kayak_response.text)
+
+kayak_soup = soup(kayak_json['content'], 'html.parser')
 
 flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
 
@@ -444,14 +460,14 @@ flightnetwork_search = referer_search[0:-1] + ',"references":{"source":"FN","cli
 
 flightnetwork_search_url = flightnetwork_home_url + 'en-CA/api/flights/search/async?filter=' + quote(flightnetwork_search)
 flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
-flightnetwork_search_resp_json = json.loads(flightnetwork_search_resp.text)
+flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
 
 i = 0
 
 while 'errors' in flightnetwork_search_resp_json:
 	i += 1
 	flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
-	flightnetwork_search_resp_json = json.loads(flightnetwork_search_resp.text)
+	flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
 	
 	if i >= 5:
 		f.close()
@@ -473,7 +489,7 @@ url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&li
 )
 
 resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
-resp2_json = json.loads(resp2.text)
+resp2_json = loads(resp2.text)
 
 i = 0
 
@@ -481,7 +497,7 @@ while resp2_json['status'] == 'InProgress' :
 	time.sleep(2)
 	i += 1
 	resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
-	resp2_json = json.loads(resp2.text)
+	resp2_json = loads(resp2.text)
 	
 	# limit re-querying to 7 times (around 14+ sec delay)
 	# also break if over 100 results found already
@@ -664,7 +680,7 @@ else:
 
 kiwi_response = get(kiwi_url)
 
-kiwi_response_json = json.loads(kiwi_response.text)
+kiwi_response_json = loads(kiwi_response.text)
 
 flights = kiwi_response_json['data']
 currency = kiwi_response_json['currency']
@@ -674,7 +690,7 @@ currency_exchange_url = 'http://free.currencyconverterapi.com/api/v5/convert?q={
 
 currency_exchange_response = get(currency_exchange_url)
 
-currency_exchange_json = json.loads(currency_exchange_response.text)
+currency_exchange_json = loads(currency_exchange_response.text)
 exchange_rate = currency_exchange_json[currency_conversion]['val']
 
 airline_code_search_params = {
@@ -726,7 +742,7 @@ for flight in flights:
 			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
 			
 			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
 			
 			airline = airline_code_json['name']
 	
@@ -757,7 +773,7 @@ for flight in flights:
 			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
 			
 			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json = json.loads(airline_code_search_response.text[new_line + 1:])
+			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
 			
 			airline = airline_code_json['name']
 			
@@ -769,7 +785,7 @@ for flight in flights:
 			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
 			
 			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json_2 = json.loads(airline_code_search_response.text[new_line + 1:])
+			airline_code_json_2 = loads(airline_code_search_response.text[new_line + 1:])
 			
 			airline_2 = airline_code_json['name']
 
