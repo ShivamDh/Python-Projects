@@ -4,6 +4,16 @@ from json import loads
 import time
 from urllib.parse import quote #used to url encode and replace characters with %xx escape
 
+
+ONE_WAY_TRIP = '1'
+RETURN_TRIP = '2'
+
+FILE_NAME = 'flights.csv'
+
+
+###############################################################################
+
+
 flight_type = ''
 start = ''
 end = ''
@@ -11,7 +21,7 @@ date_1 = ''
 date_2 = ''
 
 # Open CSV file to be used when writing all results
-f = open("flights.csv", "w")
+f = open(FILE_NAME, 'w')
 
 def get_user_input():
 	flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
@@ -25,17 +35,23 @@ def get_user_input():
 	if flight_type == '2':
 		date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
 	
-
+def is_return_trip():
+	return flight_type == RETURN_TRIP
 	
 	
 ###############################################################################
 	
+	
 get_user_input()
 
-csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(start.upper(), end.upper())
+csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
+	start.upper(), end.upper()
+)
 
-if flight_type == '2':
-	csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(end.upper(), start.upper())
+if is_return_trip():
+	csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
+		end.upper(), start.upper()
+	)
 
 csv_headers += ',Price\n\n'
 
@@ -47,16 +63,16 @@ f.write(csv_headers)
 
 expedia_url = 'https://www.expedia.ca/Flights-Search'
 
-if flight_type == '1':
-	expedia_url += '?trip=oneway'
-else:
+if is_return_trip():
 	expedia_url += '?trip=roundtrip'
+else:
+	expedia_url += '?trip=oneway'
 	
 expedia_url += '&leg1=from%3A{0}%2Cto%3A{1}%2C'.format(start, end)
 
 expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_1[0:2], date_1[3:5], date_1[6:10])
 
-if flight_type == '2':
+if is_return_trip():
 	expedia_url += '&leg2=from%3A{0}%2Cto%3A{1}%2C'.format(end, start)
 	expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_2[0:2], date_2[3:5], date_2[6:10])
 
@@ -79,7 +95,7 @@ if len(continued_results_divs) > 0:
 	flight_keys = list(flights)
 	
 	# send another Expedia request to gather second leg journeys
-	if flight_type == '2':
+	if is_return_trip():
 		expedia_results_2_url = expedia_results_url.replace(
 			'is=1',
 			'is=0&fl0=' + flight_keys[0]
@@ -230,7 +246,7 @@ kayak_date_1 = date_1[6:10] + '-' + date_1[3:5] + '-' + date_1[0:2]
 
 kayak_url_to_append = 'flights/{0}-{1}/{2}'.format(start.upper(), end.upper(), kayak_date_1)
 
-if flight_type == '2':
+if is_return_trip():
 	kayak_date_2 = date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
 	kayak_url_to_append += '/' + kayak_date_2
 
@@ -324,7 +340,7 @@ for flight in flights:
 	else:
 		start_time = start_time_divs[0].div.text.strip().replace('\n', '')
 		
-	if flight_type == '2':
+	if is_return_trip():
 		if len(start_time_divs) < 2:
 			start_time_2 = ''
 		else:
@@ -336,7 +352,7 @@ for flight in flights:
 	else:
 		end_time = end_time_divs[0].div.text.strip().replace('\n', '')
 		
-	if flight_type == '2':
+	if is_return_trip():
 		if len(end_time_divs) < 2:
 			end_time_2 = ''
 		else:
@@ -348,7 +364,7 @@ for flight in flights:
 	else:
 		duration = duration_divs[0].div.text.strip().replace('\n', '')
 
-	if flight_type == '2':
+	if is_return_trip():
 		if len(duration_divs) < 2:
 			duration_2 = ''
 		else:
@@ -364,7 +380,7 @@ for flight in flights:
 		else:
 			airline = ''
 			
-	if flight_type == '2':
+	if is_return_trip():
 		if len(airline_divs) < 2:
 			airline_2 = ''
 		else:
@@ -390,7 +406,7 @@ for flight in flights:
 			else:
 				stops = '{0} stops'.format(len(num_stops))
 	
-	if flight_type == '2':
+	if is_return_trip():
 		if len(stops_divs) < 2:
 			stops_2 = ''
 		else:
@@ -414,7 +430,7 @@ for flight in flights:
 
 	f.write('Kayak,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
 	
-	if flight_type == '2':
+	if is_return_trip():
 		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
 		
 	f.write(',{0}\n'.format(price))
@@ -439,7 +455,7 @@ header = {
 
 flight_legs = '[{"date":"{'+date_1[6:10]+'-'+date_1[3:5]+'-'+date_1[0:2]+'","destination":"'+end.upper()+'","origin":"'+start.upper()+'"}]'
 
-if flight_type == '2':
+if is_return_trip():
 	flight_legs = flight_legs[0:-1] + ',{"date":"{' + date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2] + '",'
 	flight_legs += '"destination":"' + start.upper() + '","origin":"' + end.upper() + '"}]'
 
@@ -531,7 +547,7 @@ for flight in flights:
 	
 	price = flight['fare']['currency']['code'] + str(flight['fare']['total'])
 	
-	if flight_type == '2':
+	if is_return_trip():
 		start_time_2 = flight['legs'][1]['departureTime']
 		end_time_2 = flight['legs'][1]['arrivalTime']
 
@@ -556,7 +572,7 @@ for flight in flights:
 		
 	f.write('FlightNetwork,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
 	
-	if flight_type == '2':
+	if is_return_trip():
 		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
 		
 	f.write(',{0}\n'.format(price))
@@ -572,13 +588,13 @@ flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&d
 
 departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
 
-if flight_type == '2':
+if is_return_trip():
 	return_date = date_2[6:10] + date_2[3:5] + date_2[0:2]
 else:
 	return_date = departure_date
 
 flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&searchtype=RE'.format(
-	departure_date, return_date, 'OW' if flight_type == '1' else 'RE'
+	departure_date, return_date, 'RE' if is_return_trip() else 'OW'
 )
 
 flightcenter_response = get(flightcenter_url)
@@ -612,7 +628,7 @@ for flight in flights:
 	airline_key = flight.find_next('img')['alt']
 	airline = airline_keys[airline_key]
 	
-	if flight_type == '2':
+	if is_return_trip():
 		form = flight.find_next('form')
 		inputs = form.find_all('input')
 		flightcenter_url_2 = 'https://www.flightcentre.ca/flights/booking/inbound'
@@ -671,12 +687,12 @@ kiwi_url += '&dateFrom={0}%2F{1}%2F{2}&dateTo={0}%2F{1}%2F{2}'.format(
 	date_1[0:2], date_1[3:5], date_1[6:10]
 )
 
-if flight_type == '1':
-	kiwi_url += '&typeFlight=oneway'
-else:
+if is_return_trip():
 	kiwi_url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
 		date_2[0:2], date_2[3:5], date_2[6:10]
 	)
+else:
+	kiwi_url += '&typeFlight=oneway'
 
 kiwi_response = get(kiwi_url)
 
