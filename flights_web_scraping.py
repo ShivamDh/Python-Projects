@@ -10,9 +10,7 @@ RETURN_TRIP = '2'
 
 FILE_NAME = 'flights.csv'
 
-
 ###############################################################################
-
 
 flight_type = ''
 start = ''
@@ -23,7 +21,11 @@ date_2 = ''
 # Open CSV file to be used when writing all results
 f = open(FILE_NAME, 'w')
 
+###############################################################################
+
 def get_user_input():
+	""" Get user input from command line """
+
 	flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
 
 	start = input('Enter the 3 digit airport code of the starting location: ')
@@ -35,27 +37,31 @@ def get_user_input():
 	if flight_type == '2':
 		date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
 	
+
 def is_return_trip():
 	return flight_type == RETURN_TRIP
+
 	
+def write_csv_headers():
+	csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
+		start.upper(), end.upper()
+	)
+
+	if is_return_trip():
+		csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
+			end.upper(), start.upper()
+		)
+
+	csv_headers += ',Price\n\n'
+
+	f.write(csv_headers)
 	
 ###############################################################################
 	
 	
 get_user_input()
 
-csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
-	start.upper(), end.upper()
-)
-
-if is_return_trip():
-	csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
-		end.upper(), start.upper()
-	)
-
-csv_headers += ',Price\n\n'
-
-f.write(csv_headers)
+write_csv_headers()
 
 '''
 	Web scraping from Expedia
@@ -749,20 +755,7 @@ for flight in flights:
 		stops = '{0} stops'.format(departure_flights_len)
 	
 	
-	if flight_type == '1':
-		if len(flight['airlines']) > 1:
-			airline = 'Multiple Airlines'
-		else:
-			airline_code_search_params['iata'] = flight['airlines'][0]
-			
-			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
-			
-			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
-			
-			airline = airline_code_json['name']
-	
-	else:
+	if is_return_trip():
 		return_flights_routes = [x for x in flight['route'] if x['return'] == 1]
 		
 		start_time_2_struct = time.gmtime(return_flights_routes[0]['dTime'])
@@ -804,7 +797,19 @@ for flight in flights:
 			airline_code_json_2 = loads(airline_code_search_response.text[new_line + 1:])
 			
 			airline_2 = airline_code_json['name']
-
+			
+	else:
+		if len(flight['airlines']) > 1:
+			airline = 'Multiple Airlines'
+		else:
+			airline_code_search_params['iata'] = flight['airlines'][0]
+			
+			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
+			
+			new_line = airline_code_search_response.text.find('\n')
+			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
+			
+			airline = airline_code_json['name']
 	
 	price_number = flight['price']*exchange_rate
 	
@@ -816,7 +821,5 @@ for flight in flights:
 		price
 	))
 
-	
-	
 
 f.close()
