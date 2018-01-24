@@ -23,23 +23,51 @@ f = open(FILE_NAME, 'w')
 
 ###############################################################################
 
+def is_return_trip():
+	return flight_type == RETURN_TRIP
+
+def validate_airport(airport_code):
+	if len(airport_code) != 3:
+		return False
+			
+	return True
+
 def get_user_input():
 	""" Get user input from command line """
 
-	flight_type = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
+	flight_input = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
 
-	start = input('Enter the 3 digit airport code of the starting location: ')
-	end = input('Enter the 3 digit airport code of the ending location: ')
+	while flight_input != ONE_WAY_TRIP and flight_input != RETURN_TRIP:
+		flight_input = input('Incorrect input, enter either 1 or 2\n ')
+		
+	global flight_type
+	flight_type = flight_input
 
-	date_1 = input('Enter the start date of the journey - DD/MM/YYYY: ')
+	start_input = input('Enter the 3 digit airport code of the starting location: ')
+	while not validate_airport(start_input):
+		start_input = input('Incorrect airport code entered, try again: ')
+	
+	global start
+	start = start_input
+	
+	end_input = input('Enter the 3 digit airport code of the ending location: ')
+	while not validate_airport(end_input):
+		end_input = input('Incorrect airport code entered, try again: ')
+
+	global end
+	end = end_input
+		
+	date_1_input = input('Enter the start date of the journey - DD/MM/YYYY: ')
+	
+	global date_1
+	date_1 = date_1_input
 	
 	# Only ask user input for a second date if a return trip is chosen
-	if flight_type == '2':
-		date_2 = input('Enter the end date of the journey - DD/MM/YYYY: ')
-	
-
-def is_return_trip():
-	return flight_type == RETURN_TRIP
+	if is_return_trip():
+		date_2_input = input('Enter the end date of the journey - DD/MM/YYYY: ')
+		
+		global date_2
+		date_2 = date_2_input
 
 	
 def write_csv_headers():
@@ -57,7 +85,7 @@ def write_csv_headers():
 	f.write(csv_headers)
 	
 ###############################################################################
-	
+# MAIN: 
 	
 get_user_input()
 
@@ -252,6 +280,7 @@ kayak_date_1 = date_1[6:10] + '-' + date_1[3:5] + '-' + date_1[0:2]
 
 kayak_url_to_append = 'flights/{0}-{1}/{2}'.format(start.upper(), end.upper(), kayak_date_1)
 
+kayak_date_2 = ''
 if is_return_trip():
 	kayak_date_2 = date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
 	kayak_url_to_append += '/' + kayak_date_2
@@ -465,8 +494,10 @@ if is_return_trip():
 	flight_legs = flight_legs[0:-1] + ',{"date":"{' + date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2] + '",'
 	flight_legs += '"destination":"' + start.upper() + '","origin":"' + end.upper() + '"}]'
 
+trip_type = 'roundTrip' if is_return_trip() else 'oneway'
+	
 referer_search = '{\
-	"tripType":"oneway",\
+	"tripType":"' + trip_type + '",\
 	"cabinClass":"economy",\
 	"stopsFilter":[],\
 	"legs":' + flight_legs + ',\
@@ -492,8 +523,9 @@ while 'errors' in flightnetwork_search_resp_json:
 	flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
 	
 	if i >= 5:
-		f.close()
-		exit()
+		print('closing')
+		print(flightnetwork_search_resp_json)
+		raise ValueError()
 		
 header2 = {
 	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
@@ -815,11 +847,14 @@ for flight in flights:
 	
 	price = 'CAD$' + "{:.2f}".format(float(price_number))
 	
-	f.write('Kiwi,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
-		airline, start_time, end_time, duration, stops,
-		airline_2, start_time_2, end_time_2, duration_2, stops_2,
-		price
-	))
-
+	f.write('Kiwi,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	
+	if is_return_trip():
+		f.write(',{0},{1},{2},{3},{4}'.format(
+			airline_2, start_time_2, end_time_2, duration_2, stops_2
+		))
+		
+	f.write(',{0}\n'.format(price))
+	
 
 f.close()
