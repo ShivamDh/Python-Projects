@@ -29,7 +29,34 @@ def is_return_trip():
 def validate_airport(airport_code):
 	if len(airport_code) != 3:
 		return False
-			
+		
+	url = 'https://openflights.org/php/apsearch.php'
+	
+	params = {
+		'name' : '', 
+		'iata': airport_code.upper(),
+		'icao': '',
+		'city': '',
+		'country': 'ALL',
+		'code': '',
+		'x': '',
+		'y': '',
+		'elevation': '',
+		'timezone': '',
+		'dst': 'U',
+		'db': 'airports',
+		'iatafilter': 'true',
+		'apid': '',
+		'action': 'SEARCH',
+		'offset': '0'
+	}
+	
+	response = post(url, data = params)
+	response_json = loads(response.text)
+	
+	if len(response_json['airports']) < 1:
+		return False
+	
 	return True
 
 def get_user_input():
