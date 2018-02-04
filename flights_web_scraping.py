@@ -1,6 +1,7 @@
 from requests import get, post
 from bs4 import BeautifulSoup as soup
 from json import loads
+from datetime import date
 import time
 from urllib.parse import quote #used to url encode and replace characters with %xx escape
 
@@ -26,7 +27,18 @@ f = open(FILE_NAME, 'w')
 def is_return_trip():
 	return flight_type == RETURN_TRIP
 
+	
 def validate_airport(airport_code):
+	""" Validate 3-digit IATA airport codes
+	
+	Use OpenFlights website to authenticate airport codes
+	Note:
+		Only major/well-known airport codes will be authenticated
+		Python script is to be used for planning routes between relatively known airports
+	
+	"""
+
+	# All airport codes are exactly 3 digits
 	if len(airport_code) != 3:
 		return False
 		
@@ -54,37 +66,57 @@ def validate_airport(airport_code):
 	response = post(url, data = params)
 	response_json = loads(response.text)
 	
+	# No airports matching the 3-digit airport code found
 	if len(response_json['airports']) < 1:
 		return False
 	
 	return True
 
+	
+def validate_date(input_date):
+	if len(input_date) != 10:
+		return False
+		
+	return True
+
+	
+def validate_end_date(start_date, end_date):
+	return validate_date(end_date)
+	
+	
 def get_user_input():
-	""" Get user input from command line """
+	""" Get user input from command line
+	
+	Also validates each user input using appropriate helper functions
+	Re-asks user for data if input validation fails
+	
+	"""
 
 	flight_input = input('What type of flight is this:\n\t(1) One Way\n\t(2) Return Trip\n ')
 
 	while flight_input != ONE_WAY_TRIP and flight_input != RETURN_TRIP:
-		flight_input = input('Incorrect input, enter either 1 or 2\n ')
+		flight_input = input('Invalid input, enter either 1 or 2\n ')
 		
 	global flight_type
 	flight_type = flight_input
 
 	start_input = input('Enter the 3 digit airport code of the starting location: ')
 	while not validate_airport(start_input):
-		start_input = input('Incorrect airport code entered, try again: ')
+		start_input = input('Invalid airport code entered, try again: ')
 	
 	global start
 	start = start_input
 	
 	end_input = input('Enter the 3 digit airport code of the ending location: ')
 	while not validate_airport(end_input):
-		end_input = input('Incorrect airport code entered, try again: ')
+		end_input = input('Invalid airport code entered, try again: ')
 
 	global end
 	end = end_input
 		
 	date_1_input = input('Enter the start date of the journey - DD/MM/YYYY: ')
+	while not validate_date(date_1_input):
+		date_1_input = input('Invalid date entered, try again: ')
 	
 	global date_1
 	date_1 = date_1_input
@@ -92,6 +124,9 @@ def get_user_input():
 	# Only ask user input for a second date if a return trip is chosen
 	if is_return_trip():
 		date_2_input = input('Enter the end date of the journey - DD/MM/YYYY: ')
+		
+		while not validate_end_date(date_1_input, date_2_input):
+			date_2_input = input('Invalid date entered, try again: ')
 		
 		global date_2
 		date_2 = date_2_input
