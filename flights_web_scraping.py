@@ -1,7 +1,7 @@
 from requests import get, post
 from bs4 import BeautifulSoup as soup
 from json import loads
-from datetime import date
+from datetime import date, timedelta
 import time
 from urllib.parse import quote #used to url encode and replace characters with %xx escape
 
@@ -74,14 +74,54 @@ def validate_airport(airport_code):
 
 	
 def validate_date(input_date):
+	""" Validates any given date
+	
+	Dates are not to be chosen greater than 6 months from today
+	
+	"""
+
 	if len(input_date) != 10:
+		return False
+	
+	try:
+		test_date = int(input_date[0:2])
+		test_month = int(input_date[3:5])
+		test_year = int(input_date[6:10])
+	except ValueError:
+		return False
+		
+	today = date.today()
+	test_date = date(test_year, test_month, test_date)
+	
+	days_difference = test_date - today
+		
+	if test_date < today or days_difference.days > 185:
 		return False
 		
 	return True
 
 	
 def validate_end_date(start_date, end_date):
-	return validate_date(end_date)
+	""" Validates End Date of Journey Chosen
+	
+	Completes a comparison check against start_date
+	End date is also not to be chosen greater than 6 months in advance
+	
+	"""
+
+	if not validate_date(end_date):
+		return False
+		
+	try:
+		start = date(int(start_date[6:10]), int(start_date[3:5]), int(start_date[0:2]))
+		end = date(int(end_date[6:10]), int(end_date[3:5]), int(end_date[0:2]))
+	except ValueError:
+		return False
+	
+	if end <= start:
+		return False
+		
+	return True
 	
 	
 def get_user_input():
