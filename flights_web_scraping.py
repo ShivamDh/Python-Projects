@@ -186,6 +186,41 @@ def write_csv_headers():
 
 	f.write(csv_headers)
 	
+	
+def build_expedia_url():
+	url = 'https://www.expedia.ca/Flights-Search'
+	
+	trip_type = '?trip=roundtrip' if is_return_trip() else '?trip=oneway'
+
+	url += '{0}&leg1=from%3A{1}%2Cto%3A{2}%2Cdeparture%3A{3}%2F{4}%2F{5}TANYT'.format(
+		trip_type, start, end, date_1[0:2], date_1[3:5], date_1[6:10]
+	)
+
+	if is_return_trip():
+		url += '&leg2=from%3A{0}%2Cto%3A{1}%2C'.format(end, start)
+		url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_2[0:2], date_2[3:5], date_2[6:10])
+
+	url += '&passengers=adults%3A1&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
+	
+	return url
+	
+
+def build_kiwi_url():
+	url = 'https://api.skypicker.com/flights?adults=1&asc=1'
+
+	url += '&flyFrom={0}&to={1}&sort=price&dateFrom={2}%2F{3}%2F{4}&dateTo={2}%2F{3}%2F{4}'.format(
+		start.upper(), end.upper(), date_1[0:2], date_1[3:5], date_1[6:10]
+	)
+
+	if is_return_trip():
+		url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
+			date_2[0:2], date_2[3:5], date_2[6:10]
+		)
+	else:
+		url += '&typeFlight=oneway'
+	
+	return url
+	
 ###############################################################################
 # MAIN: 
 	
@@ -197,23 +232,7 @@ write_csv_headers()
 	Web scraping from Expedia
 '''
 
-expedia_url = 'https://www.expedia.ca/Flights-Search'
-
-if is_return_trip():
-	expedia_url += '?trip=roundtrip'
-else:
-	expedia_url += '?trip=oneway'
-	
-expedia_url += '&leg1=from%3A{0}%2Cto%3A{1}%2C'.format(start, end)
-
-expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_1[0:2], date_1[3:5], date_1[6:10])
-
-if is_return_trip():
-	expedia_url += '&leg2=from%3A{0}%2Cto%3A{1}%2C'.format(end, start)
-	expedia_url += 'departure%3A{0}%2F{1}%2F{2}TANYT'.format(date_2[0:2], date_2[3:5], date_2[6:10])
-
-expedia_url += '&passengers=adults%3A1&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
-
+expedia_url = build_expedia_url()
 expedia_response = get(expedia_url)
 
 expedia_soup = soup(expedia_response.text, 'html.parser')
@@ -819,21 +838,7 @@ for flight in flights:
 	Web scraping from Kiwi
 '''
 
-kiwi_url = 'https://api.skypicker.com/flights?adults=1&asc=1&flyFrom={0}&to={1}&sort=price'.format(
-	start.upper(), end.upper()
-)
-
-kiwi_url += '&dateFrom={0}%2F{1}%2F{2}&dateTo={0}%2F{1}%2F{2}'.format(
-	date_1[0:2], date_1[3:5], date_1[6:10]
-)
-
-if is_return_trip():
-	kiwi_url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
-		date_2[0:2], date_2[3:5], date_2[6:10]
-	)
-else:
-	kiwi_url += '&typeFlight=oneway'
-
+kiwi_url = build_kiwi_url()
 kiwi_response = get(kiwi_url)
 
 kiwi_response_json = loads(kiwi_response.text)
