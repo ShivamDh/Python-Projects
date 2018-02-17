@@ -29,13 +29,18 @@ def is_return_trip():
 
 	
 def validate_airport(airport_code):
-	""" Validate 3-digit IATA airport codes
-	
-	Use OpenFlights website to authenticate airport codes
+	""" Use OpenFlights website to authenticate airport codes
+
 	Note:
 		Only major/well-known airport codes will be authenticated
 		Python script is to be used for planning routes between relatively known airports
 	
+	Args:
+        airport_code (str): the 3 digit IATA code to be validated
+
+    Returns:
+        bool: True for valid (found) airport code, False if invalid
+
 	"""
 
 	# All airport codes are exactly 3 digits
@@ -76,7 +81,12 @@ def validate_airport(airport_code):
 def validate_date(input_date):
 	""" Validates any given date
 	
-	Dates are not to be chosen greater than 6 months from today
+	Args:
+		input_date (str): date to be validated
+
+	Returns:
+		bool: True for valid date format and a date that lies between
+			  tomorrow and 6 months from now
 	
 	"""
 
@@ -106,6 +116,14 @@ def validate_end_date(start_date, end_date):
 	
 	Completes a comparison check against start_date
 	End date is also not to be chosen greater than 6 months in advance
+
+	Args:
+		start_date (str): a start date for the journey, presumably already validated
+		end_date (str): an ending date for journey, to be validated
+
+	Returns:
+		bool: True for valid date format for end_date, and a date that lies between
+			  tomorrow and 6 months from now, also expected to be on or after start_date
 	
 	"""
 
@@ -173,6 +191,13 @@ def get_user_input():
 
 	
 def write_csv_headers():
+	""" Write CSV file headers
+
+	Header is also dependent upon what type of journey is being searched
+
+	"""
+
+
 	csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
 		start.upper(), end.upper()
 	)
@@ -188,6 +213,13 @@ def write_csv_headers():
 	
 	
 def build_expedia_url():
+	""" Build a url used to GET expedia results
+
+	Returns:
+		str: url-encoded string used to get a response from Expedia
+
+	"""
+
 	url = 'https://www.expedia.ca/Flights-Search'
 	
 	trip_type = '?trip=roundtrip' if is_return_trip() else '?trip=oneway'
@@ -241,7 +273,9 @@ continued_results_divs = expedia_soup.find_all('div', {'id': 'originalContinuati
 
 if len(continued_results_divs) > 0:
 	expedia_results_id = continued_results_divs[0].text.strip()
-	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging?c={0}&is=1&sp=asc&cz=200&cn=0&ul=0'.format(expedia_results_id)
+	expedia_results_url = 'https://www.expedia.ca/Flight-Search-Paging?c={0}&is=1&sp=asc&cz=200&cn=0&ul=0'.format(
+		expedia_results_id
+	)
 	
 	expedia_results_response = get(expedia_results_url)
 	expedia_json = loads(expedia_results_response.text)
