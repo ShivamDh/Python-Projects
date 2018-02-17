@@ -27,6 +27,27 @@ f = open(FILE_NAME, 'w')
 def is_return_trip():
 	return flight_type == RETURN_TRIP
 
+
+def write_csv_headers():
+	""" Write CSV file headers
+
+	Header is also dependent upon what type of journey is being searched
+
+	"""
+
+	csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
+		start.upper(), end.upper()
+	)
+
+	if is_return_trip():
+		csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
+			end.upper(), start.upper()
+		)
+
+	csv_headers += ',Price\n\n'
+
+	f.write(csv_headers)
+
 	
 def validate_airport(airport_code):
 	""" Use OpenFlights website to authenticate airport codes
@@ -188,28 +209,6 @@ def get_user_input():
 		
 		global date_2
 		date_2 = date_2_input
-
-	
-def write_csv_headers():
-	""" Write CSV file headers
-
-	Header is also dependent upon what type of journey is being searched
-
-	"""
-
-
-	csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
-		start.upper(), end.upper()
-	)
-
-	if is_return_trip():
-		csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
-			end.upper(), start.upper()
-		)
-
-	csv_headers += ',Price\n\n'
-
-	f.write(csv_headers)
 	
 	
 def build_expedia_url():
@@ -238,6 +237,13 @@ def build_expedia_url():
 	
 
 def build_kiwi_url():
+	""" Build a url used to GET Kiwi results
+
+	Returns:
+		str: url-encoded string used to get a response from Kiwi
+
+	"""
+
 	url = 'https://api.skypicker.com/flights?adults=1&asc=1'
 
 	url += '&flyFrom={0}&to={1}&sort=price&dateFrom={2}%2F{3}%2F{4}&dateTo={2}%2F{3}%2F{4}'.format(
@@ -252,6 +258,29 @@ def build_kiwi_url():
 		url += '&typeFlight=oneway'
 	
 	return url
+
+
+def currency_exchange_url(initial_currency):
+	""" Build a url used to exchange any currency to CAD
+
+	Uses online API to get hourly updated currency exchange rates
+
+	Args:
+		initial_currency (str): currency wanting to exhcange with CAD
+
+	Returns:
+		str: url-encoded string for the online currency exchange website
+
+	"""
+
+	currency_conversion = '{}_CAD'.format(initial_currency.upper())
+
+	url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(
+		currency_conversion
+	)
+
+	return url
+
 	
 ###############################################################################
 # MAIN: 
