@@ -260,26 +260,62 @@ def build_kiwi_url():
 	return url
 
 
-def currency_exchange_url(initial_currency):
-	""" Build a url used to exchange any currency to CAD
+def get_exchange_rate(initial_currency):
+	""" Get currency exchange rate from initial currency to CAD
 
-	Uses online API to get hourly updated currency exchange rates
+	Use an online API to get hourly updated currency exchange rates
 
 	Args:
 		initial_currency (str): currency wanting to exhcange with CAD
 
 	Returns:
-		str: url-encoded string for the online currency exchange website
+		float: an exchange rate representing how much 1 unit of initial currency represents CAD
+			   ex. if 1 USD = 1.321 CAD  then function returns 1.321
 
 	"""
 
-	currency_conversion = '{}_CAD'.format(initial_currency.upper())
+	# Account for condition that flight results were returned in CAD
+	if initial.upper() == 'CAD'
+		return 1
+
+	conversion = '{}_CAD'.format(initial_currency.upper())
 
 	url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(
-		currency_conversion
+		conversion
 	)
 
-	return url
+	try:
+		response = get(url)
+		response_json = loads(response.text)
+	except Exception:
+		return 1
+
+	rate = response_json[conversion]['val']
+
+	return rate
+
+
+def num_stops_to_text(stops):
+	""" Convert numeric stop number to descriptive and consistent text 
+
+	Args:
+		stops (int): Number of stops
+
+	Returns:
+		str: String text depending on number of stops
+
+	"""
+
+	if stops < 0:
+		return ''
+
+	if stops == 0:
+		return 'Nonstop'
+	elif stops == 1:
+		return '{0} Stop'.format(stops)
+	
+
+	return '{1} Stops'.format(stops)
 
 	
 ###############################################################################
@@ -909,13 +945,7 @@ kiwi_response_json = loads(kiwi_response.text)
 flights = kiwi_response_json['data']
 currency = kiwi_response_json['currency']
 
-currency_conversion = '{}_CAD'.format(currency.upper())
-currency_exchange_url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(currency_conversion)
-
-currency_exchange_response = get(currency_exchange_url)
-
-currency_exchange_json = loads(currency_exchange_response.text)
-exchange_rate = currency_exchange_json[currency_conversion]['val']
+exchange_rate = get_exchange_rate(currency)
 
 airline_code_search_params = {
 	'name': '',
