@@ -296,15 +296,21 @@ def get_exchange_rate(initial_currency):
 
 
 def num_stops_to_text(stops):
-	""" Convert numeric stop number to descriptive and consistent text 
+	""" Convert numeric/string stop number to descriptive and consistent text 
 
 	Args:
-		stops (int): Number of stops
+		stops (int/str): Number of stops
 
 	Returns:
 		str: String text depending on number of stops
 
 	"""
+
+	if type(stops) is str:
+		try:
+			stops = int(stops)
+		except ValueError:
+			return ''
 
 	if stops < 0:
 		return ''
@@ -313,9 +319,32 @@ def num_stops_to_text(stops):
 		return 'Nonstop'
 	elif stops == 1:
 		return '{0} Stop'.format(stops)
-	
 
 	return '{1} Stops'.format(stops)
+
+
+def parse_expedia_html(html_parent, html_type, other):
+	""" Parse Expedia html bs4 object for particular flight to find specific information 
+
+	Look for next available element within html_parent, return stripped text from html element
+
+	Args:
+		html_parent (bs4.element.Tag): a specific flight result html element as a BeautifulSoup obj
+		html_type (str): the type of html_element looking for (ex. span, div)
+		other (dict): specifiying unique identifier about html element like class of data-test-id
+
+	Returns:
+		str: the resulting information of an empty string if unsuccessful
+
+	"""
+
+	html_element = html_parent.find_next(html_type, other)
+	if html_element is None:
+		return ''
+	
+	return html_element.text.strip()
+
+
 
 	
 ###############################################################################
@@ -381,13 +410,7 @@ if len(continued_results_divs) > 0:
 			if airline == '':
 				airline = 'Multiple Airlines'
 			
-			stops = flight[1]['formattedStops']
-			if stops == '0':
-				stops = 'Nonstop'
-			elif stops == '1':
-				stops += ' Stop'
-			else:
-				stops += ' Stops'
+			stops = num_stops_to_text(flight[1]['formattedStops'])
 			
 			for flight_2 in flights_2:
 				start_time_2 = flight_2[1]['departureTime']['time']
@@ -399,13 +422,7 @@ if len(continued_results_divs) > 0:
 				if airline_2 == '':
 					airline_2 = 'Multiple Airlines'
 				
-				stops_2 = flight_2[1]['formattedStops']
-				if stops_2 == '0':
-					stops_2 = 'Nonstop'
-				elif stops_2 == '1':
-					stops_2 += ' Stop'
-				else:
-					stops_2 += ' Stops'
+				stops_2 = num_stops_to_text(flight_2[1]['formattedStops'])
 				
 				f.write('Expedia,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}'.format(
 					airline, start_time, end_time, duration, stops,
@@ -429,45 +446,24 @@ if len(continued_results_divs) > 0:
 			if airline == '':
 				airline = 'Multiple Airlines'
 			
-			stops = flights[key]['formattedStops']
-			if stops == '0':
-				stops = 'Nonstop'
-			elif stops == '1':
-				stops += ' Stop'
-			else:
-				stops += ' Stops'
-			
+			stops = num_stops_to_text(flights[key]['formattedStops'])
+
 			f.write('Expedia,{0},{1},{2},{2},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
 	
 	for flight in flights:
-		start_time_span = flight.find_next('span', {'data-test-id': 'departure-time'})
-		if start_time_span is None:
-			start_time = ''
-		else:
-			start_time = start_time_span.text.strip()
-		
-		end_time_span = flight.find_next('span', {'data-test-id': 'arrival-time'})
-		if end_time_span is None:
-			end_time = ''
-		else:
-			end_time = end_time_span.text.strip()
-		
-		duration_span = flight.find_next('span', {'data-test-id': 'duration'})
-		if duration_span is None:
-			duration = ''
-		else:
-			duration = duration_span.text.strip()
-		
-		airline_span = flight.find_next('div', {'data-test-id': 'airline-name'})
-		if airline_span is None:
-			airline = ''
-		else:
-			airline = airline_span.text.strip()
-			
+
+		start_time = parse_expedia_html(flight, 'span', {'data-test-id': 'departure-time'})
+		end_time = parse_expedia_html(flight, 'span', {'data-test-id': 'arrival-time'})
+
+		duration = parse_expedia_html(flight, 'span', {'data-test-id': 'duration'})
+		airline = parse_expedia_html(flight, 'div', {'data-test-id': 'airline-name'})
+
+		duration_span = flight.find_next('span', {'data-test-id': 'duration'})		
 		stops_span = duration_span.find_next_sibling('span') 
+		
 		if stops_span is None or not stops_span.has_attr('data-test-num-stops'):
 			stops = ''
 		else:
@@ -654,12 +650,7 @@ for flight in flights:
 			stops = ''
 		else:
 			num_stops = len(stops_inner_spans.find_all('span', {'class': 'dot'}))
-			if num_stops == 0:
-				stops = 'Nonstop'
-			elif num_stops == 1:
-				stops = '1 stop'
-			else:
-				stops = '{0} stops'.format(len(num_stops))
+			stops = num_stops_to_text(num_stops)
 	
 	if is_return_trip():
 		if len(stops_divs) < 2:
@@ -670,12 +661,7 @@ for flight in flights:
 				stops_2 = ''
 			else:
 				num_stops_2 = len(stops_inner_spans_2.find_all('span', {'class': 'dot'}))
-				if num_stops_2 == 0:
-					stops_2 = 'Nonstop'
-				elif num_stops == 1:
-					stops_2 = '1 stop'
-				else:
-					stops_2 = '{0} stops'.format(len(num_stops))
+				stops_2 = num_stops_to_text(num_stops_2)
 
 	price_spans = flight.find_next('span', {'class': 'price'})
 	if price_spans is None:
@@ -796,12 +782,7 @@ for flight in flights:
 		airline = 'Multiple Airlines'
 	
 	num_stops = len(segments) - 1
-	if num_stops == 0:
-		stops = 'Nonstop'
-	elif num_stops == 1:
-		stops = '1 stop'
-	else:
-		stops = '{0} stops'.format(num_stops)
+	stops = num_stops_to_text(num_stops)
 	
 	price = flight['fare']['currency']['code'] + str(flight['fare']['total'])
 	
@@ -821,12 +802,7 @@ for flight in flights:
 			airline_2 = 'Multiple Airlines'
 			
 		num_stops_2 = len(segments_2) - 1
-		if num_stops_2 == 0:
-			stops_2 = 'Nonstop'
-		elif num_stops_2 == 1:
-			stops_2 = '1 stop'
-		else:
-			stops_2 = '{0} stops'.format(num_stops_2)
+		stops_2 = num_stops_to_text(num_stops_2)
 		
 	f.write('FlightNetwork,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
 	
@@ -974,18 +950,11 @@ for flight in flights:
 	duration = flight['fly_duration']
 	
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
-	departure_flights_len = len(departure_flights)
 	
 	return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
-	return_flights_len = len(return_flights)
+	return_flights_len = 
 	
-	if departure_flights_len == 0:
-		stops = 'Nonstop'
-	elif departure_flights_len == 1:
-		stops = '1 stop'
-	else:
-		stops = '{0} stops'.format(departure_flights_len)
-	
+	stops = num_stops_to_text(len(departure_flights))
 	
 	if is_return_trip():
 		return_flights_routes = [x for x in flight['route'] if x['return'] == 1]
@@ -997,15 +966,8 @@ for flight in flights:
 		end_time_2 = '{0}h {1}m'.format(end_time_2_struct.tm_hour, end_time_2_struct.tm_min)
 		
 		duration_2 = flight['return_duration']
-		
-		if return_flights_len == 0:
-			stops_2 = 'Nonstop'
-		elif return_flights_len == 1:
-			stops_2 = '1 stop'
-		else:
-			stops_2 = '{0} stops'.format(return_flights_len)
-	
-		
+		stops_2 = num_stops_to_text(len(return_flights))
+				
 		if len(departure_flights) > 1:
 			airline = 'Multiple Airlines'
 		else:
