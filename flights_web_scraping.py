@@ -275,7 +275,7 @@ def get_exchange_rate(initial_currency):
 	"""
 
 	# Account for condition that flight results were returned in CAD
-	if initial.upper() == 'CAD'
+	if initial_currency.upper() == 'CAD':
 		return 1
 
 	conversion = '{}_CAD'.format(initial_currency.upper())
@@ -320,25 +320,25 @@ def num_stops_to_text(stops):
 	elif stops == 1:
 		return '{0} Stop'.format(stops)
 
-	return '{1} Stops'.format(stops)
+	return '{0} Stops'.format(stops)
 
 
-def parse_expedia_html(html_parent, html_type, other):
-	""" Parse Expedia html bs4 object for particular flight to find specific information 
+def parse_html_for_info(html_parent, html_type, other):
+	""" Parse html bs4 object for particular flight to find specific information 
 
 	Look for next available element within html_parent, return stripped text from html element
 
 	Args:
 		html_parent (bs4.element.Tag): a specific flight result html element as a BeautifulSoup obj
 		html_type (str): the type of html_element looking for (ex. span, div)
-		other (dict): specifiying unique identifier about html element like class of data-test-id
+		other (dict): specifiying unique identifiers about html element like class
 
 	Returns:
 		str: the resulting information of an empty string if unsuccessful
 
 	"""
 
-	html_element = html_parent.find_next(html_type, other)
+	html_element = html_parent.find(html_type, other)
 	if html_element is None:
 		return ''
 	
@@ -455,21 +455,21 @@ else:
 	
 	for flight in flights:
 
-		start_time = parse_expedia_html(flight, 'span', {'data-test-id': 'departure-time'})
-		end_time = parse_expedia_html(flight, 'span', {'data-test-id': 'arrival-time'})
+		start_time = parse_html_for_info(flight, 'span', {'data-test-id': 'departure-time'})
+		end_time = parse_html_for_info(flight, 'span', {'data-test-id': 'arrival-time'})
 
-		duration = parse_expedia_html(flight, 'span', {'data-test-id': 'duration'})
-		airline = parse_expedia_html(flight, 'div', {'data-test-id': 'airline-name'})
+		duration = parse_html_for_info(flight, 'span', {'data-test-id': 'duration'})
+		airline = parse_html_for_info(flight, 'div', {'data-test-id': 'airline-name'})
 
-		duration_span = flight.find_next('span', {'data-test-id': 'duration'})		
+		duration_span = flight.find('span', {'data-test-id': 'duration'})		
 		stops_span = duration_span.find_next_sibling('span') 
-		
+
 		if stops_span is None or not stops_span.has_attr('data-test-num-stops'):
 			stops = ''
 		else:
 			stops = stops_span.text.strip().replace('(', '').replace(')','')
 		
-		price_column_div = flight.find_next('div', {'data-test-id': 'price-column'})   
+		price_column_div = flight.find('div', {'data-test-id': 'price-column'})   
 		if price_column_div is None:
 			price = ''
 		else:
@@ -479,7 +479,9 @@ else:
 			else:
 				price = price_spans[-1].text.strip().replace(',', '')
 			
-		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(
+			airline, start_time, end_time, duration, stops, price
+		))
 
 
 '''
@@ -645,7 +647,7 @@ for flight in flights:
 	if len(stops_divs) < 1:
 		stops = ''
 	else:
-		stops_inner_spans = stops_divs[0].find_next('span', {'class': 'axis'})
+		stops_inner_spans = stops_divs[0].find('span', {'class': 'axis'})
 		if stops_inner_spans is None:
 			stops = ''
 		else:
@@ -656,25 +658,23 @@ for flight in flights:
 		if len(stops_divs) < 2:
 			stops_2 = ''
 		else:
-			stops_inner_spans_2 = stops_divs[0].find_next('span', {'class': 'axis'})
+			stops_inner_spans_2 = stops_divs[0].find('span', {'class': 'axis'})
 			if stops_inner_spans_2 is None:
 				stops_2 = ''
 			else:
 				num_stops_2 = len(stops_inner_spans_2.find_all('span', {'class': 'dot'}))
 				stops_2 = num_stops_to_text(num_stops_2)
 
-	price_spans = flight.find_next('span', {'class': 'price'})
-	if price_spans is None:
-		price = ''
-	else:
-		price = price_spans.text.strip()
+	price = parse_html_for_info(flight, 'span', {'class': 'price'})
 
-	f.write('Kayak,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	f.write('Kayak,{0},{1},{2},{3},{4},'.format(airline, start_time, end_time, duration, stops))
 	
 	if is_return_trip():
-		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
+		f.write('{0},{1},{2},{3},{4},'.format(
+			airline_2, start_time_2, end_time_2, duration_2, stops_2
+		))
 		
-	f.write(',{0}\n'.format(price))
+	f.write('{0}\n'.format(price))
 
 
 '''
@@ -728,9 +728,8 @@ while 'errors' in flightnetwork_search_resp_json:
 	flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
 	flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
 	
+	# allow for 5 attempts of retrying GET request
 	if i >= 5:
-		print('closing')
-		print(flightnetwork_search_resp_json)
 		raise ValueError()
 		
 header2 = {
@@ -804,12 +803,16 @@ for flight in flights:
 		num_stops_2 = len(segments_2) - 1
 		stops_2 = num_stops_to_text(num_stops_2)
 		
-	f.write('FlightNetwork,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
+	f.write('FlightNetwork,{0},{1},{2},{3},{4},'.format(
+		airline, start_time, end_time, duration, stops
+	))
 	
 	if is_return_trip():
-		f.write(',{0},{1},{2},{3},{4}'.format(airline_2, start_time_2, end_time_2, duration_2, stops_2))
+		f.write('{0},{1},{2},{3},{4},'.format(
+			airline_2, start_time_2, end_time_2, duration_2, stops_2
+		))
 		
-	f.write(',{0}\n'.format(price))
+	f.write('{0}\n'.format(price))
 		
 
 '''
@@ -859,11 +862,11 @@ for flight in flights:
 	stops = bold_texts[2].text.strip()
 	price = bold_texts[4].text.strip()
 	
-	airline_key = flight.find_next('img')['alt']
+	airline_key = flight.find('img')['alt']
 	airline = airline_keys[airline_key]
 	
 	if is_return_trip():
-		form = flight.find_next('form')
+		form = flight.find('form')
 		inputs = form.find_all('input')
 		flightcenter_url_2 = 'https://www.flightcentre.ca/flights/booking/inbound'
 		
@@ -900,7 +903,7 @@ for flight in flights:
 			stops_2 = bold_texts_2[2].text.strip()
 			price_2 = bold_texts_2[4].text.strip()
 			
-			airline_key_2 = flight_2.find_next('img')['alt']
+			airline_key_2 = flight_2.find('img')['alt']
 			airline_2 = airline_keys[airline_key_2]
 			
 			f.write('FlightCentre,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
@@ -952,7 +955,6 @@ for flight in flights:
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
 	
 	return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
-	return_flights_len = 
 	
 	stops = num_stops_to_text(len(departure_flights))
 	
