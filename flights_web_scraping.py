@@ -345,6 +345,44 @@ def parse_html_for_info(html_parent, html_type, other):
 	return html_element.text.strip()
 
 
+def airline_code_to_name(airline_code):
+	""" Converts an airline's code to name using a lookup API
+
+	Args:
+		airline_code (str): the two-digit IATA airline code
+
+	Returns:
+		str: official airline name looked up using IATA code
+
+	"""
+
+	params = {
+		'name': '',
+		'alias': '',
+		'iata': airline_code,
+		'icao': '',
+		'country': 'ALL',
+		'callsign': '',
+		'mode': 'F',
+		'active': '',
+		'offset': '0',
+		'iatafilter': 'true',
+		'alid': '',
+		'action': 'SEARCH'
+	}
+
+	url = 'https://openflights.org/php/alsearch.php'	
+
+	response = post(url, data = params)
+	new_line_index = response.text.find('\n')
+
+	response_json = loads(response.text[new_line_index + 1:])
+
+	if not 'name' in response_json:
+		return ''
+
+	return response_json['name']
+	
 
 	
 ###############################################################################
@@ -973,39 +1011,18 @@ for flight in flights:
 		if len(departure_flights) > 1:
 			airline = 'Multiple Airlines'
 		else:
-			airline_code_search_params['iata'] = next(iter(departure_flights))
-			
-			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
-			
-			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
-			
-			airline = airline_code_json['name']
+			airline = airline_code_to_name(next(iter(departure_flights)))
 			
 		if len(return_flights) > 1:
 			airline_2 = 'Multiple Airlines'
 		else:
-			airline_code_search_params['iata'] = next(iter(departure_flights))
-			
-			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
-			
-			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json_2 = loads(airline_code_search_response.text[new_line + 1:])
-			
-			airline_2 = airline_code_json['name']
+			airline_2 = airline_code_to_name(next(iter(departure_flights)))
 			
 	else:
 		if len(flight['airlines']) > 1:
 			airline = 'Multiple Airlines'
 		else:
-			airline_code_search_params['iata'] = flight['airlines'][0]
-			
-			airline_code_search_response = post(airline_code_search_url, data = airline_code_search_params)
-			
-			new_line = airline_code_search_response.text.find('\n')
-			airline_code_json = loads(airline_code_search_response.text[new_line + 1:])
-			
-			airline = airline_code_json['name']
+			airline = airline_code_to_name(flight['airlines'][0])
 	
 	price_number = flight['price']*exchange_rate
 	
