@@ -28,27 +28,6 @@ def is_return_trip():
 	return flight_type == RETURN_TRIP
 
 
-def write_csv_headers():
-	""" Write CSV file headers
-
-	Header is also dependent upon what type of journey is being searched
-
-	"""
-
-	csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops'.format(
-		start.upper(), end.upper()
-	)
-
-	if is_return_trip():
-		csv_headers += ',Airline,Start ({0}),End({1}),Duration,Stops'.format(
-			end.upper(), start.upper()
-		)
-
-	csv_headers += ',Price\n\n'
-
-	f.write(csv_headers)
-
-	
 def validate_airport(airport_code):
 	""" Use OpenFlights website to authenticate airport codes
 
@@ -385,6 +364,15 @@ def airline_code_to_name(airline_code):
 	
 
 def get_kayak_response():
+	""" Obtains Kayak flight information for given route and date
+
+	Utilizes cookies from home page in order to access flight information
+
+	Returns
+		requests.models.Response: A request reponse from Kayak's website
+
+	"""
+
 	home_url = 'https://www.kayak.com'
 	home_response = get(home_url)
 	kayak_cookies = home_response.cookies
@@ -412,6 +400,8 @@ def get_kayak_response():
 	    'X-Requested-With': 'XMLHttpRequest'
 	}
 
+	oneway = str(not is_return_trip()).lower()
+
 	params = {
 	    'searchId':'',
 	    'poll':'true',
@@ -421,7 +411,7 @@ def get_kayak_response():
 	    'useViewStateFilterState':'false',
 	    'pageNumber':'1',
 	    'append':'false',
-	    'pollingId':'593601',  #interesting. explore further
+	    'pollingId':'593601',
 	    'requestReason':'POLL',
 	    'isSecondPhase':'false',
 	    'textAndPageLocations':'bottom,right',
@@ -442,21 +432,11 @@ def get_kayak_response():
 	    'provider':'',
 	    'isMulticity':'false',
 	    'flex_category':'exact',
-	    'depart_date':kayak_date_1,
-	    'return_date':kayak_date_2,
-	    'oneway':'false',
-	    'origincode':start.upper(),
-	    'origin':start.upper(),
 	    'origin_location':'',
-	    'origin_code':'',
 	    'nearby_origin':'false',
-	    'destination':end.upper(),
 	    'destination_location':'',
-	    'destination_code':end.upper(),
 	    'nearby_destination':'false',
 	    'countrySearch':'false',
-	    'depart_date_canon':kayak_date_1,
-	    'return_date_canon':kayak_date_2,
 	    'travelers':'1',
 	    'adults':'1',
 	    'seniors':'0',
@@ -467,17 +447,27 @@ def get_kayak_response():
 	    'cabin':'e',
 	    'cabinDisplayType':'Economy',
 	    'vertical':'flights',
-	    'url':kayak_url_to_append,
 	    'id':'',
 	    'navigateToResults':'false',
 	    'ajaxts':'',
 	    'scriptsMetadata':'',
 	    'stylesMetadata':'',
+	    'depart_date':kayak_date_1,
+	    'return_date':kayak_date_2,
+	    'oneway':oneway,
+	    'origin_code':start.upper(),
+	    'origincode':start.upper(),
+	    'origin':start.upper(),
+	    'destination':end.upper(),
+	    'destination_code':end.upper(),
+	    'depart_date_canon':kayak_date_1,
+	    'return_date_canon':kayak_date_2,
+	    'url':kayak_url_to_append,
 	}
 
-	kayak_response = post(search_url, headers = headers, data = params, cookies = kayak_cookies)
+	response = post(search_url, headers = headers, data = params, cookies = kayak_cookies)
 
-	return kayak_response
+	return response
 
 	
 ###############################################################################
@@ -485,11 +475,24 @@ def get_kayak_response():
 	
 get_user_input()
 
-write_csv_headers()
 
-'''
-	Web scraping from Expedia
-'''
+# Write CSV Headers to file
+
+csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops,'.format(
+	start.upper(), end.upper()
+)
+
+if is_return_trip():
+	csv_headers += 'Airline,Start ({0}),End({1}),Duration,Stops,'.format(
+		end.upper(), start.upper()
+	)
+
+csv_headers += 'Price\n\n'
+
+f.write(csv_headers)
+
+
+# Web scraping from Expedia
 
 expedia_url = build_expedia_url()
 expedia_response = get(expedia_url)
