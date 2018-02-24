@@ -384,6 +384,101 @@ def airline_code_to_name(airline_code):
 	return response_json['name']
 	
 
+def get_kayak_response():
+	home_url = 'https://www.kayak.com'
+	home_response = get(home_url)
+	kayak_cookies = home_response.cookies
+
+	search_url = home_url + '/s/horizon/flights/results/FlightSearchPoll'
+
+	kayak_date_1 = '{0}-{1}-{2}'.format(date_1[6:10], date_1[3:5], date_1[0:2])
+
+	kayak_url_to_append = 'flights/{0}-{1}/{2}'.format(start.upper(), end.upper(), kayak_date_1)
+
+	kayak_date_2 = ''
+	if is_return_trip():
+		kayak_date_2 = '{0}-{1}-{2}'.format(date_2[6:10], date_2[3:5], date_2[0:2])
+		kayak_url_to_append += '/' + kayak_date_2
+
+	referer = home_url + '/' + kayak_url_to_append
+
+	headers = {
+	    'Host': 'www.kayak.com',
+	    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+	    'Accept': '*/*',
+	    'Accept-Language': 'en-US,en;q=0.9',
+	    'Referer': referer,
+	    'Content-Type': 'application/x-www-form-urlencoded',
+	    'X-Requested-With': 'XMLHttpRequest'
+	}
+
+	params = {
+	    'searchId':'',
+	    'poll':'true',
+	    'pollNumber':'0',
+	    'applyFilters':'true',
+	    'filterState':'',
+	    'useViewStateFilterState':'false',
+	    'pageNumber':'1',
+	    'append':'false',
+	    'pollingId':'593601',  #interesting. explore further
+	    'requestReason':'POLL',
+	    'isSecondPhase':'false',
+	    'textAndPageLocations':'bottom,right',
+	    'displayAdPageLocations':'none',
+	    'existingAds':'false',
+	    'activeLeg':'-1',
+	    'view':'list',
+	    'renderPlusMinusThreeFlex':'false',
+	    'renderAirlineStopsMatrix':'false',
+	    'renderFlexHeader':'true',
+	    'tab':'flights',
+	    'pageOrigin':'F..FD..M0',
+	    'src':'',
+	    'searchingAgain':'',
+	    'c2s':'',
+	    'po':'',
+	    'personality':'',
+	    'provider':'',
+	    'isMulticity':'false',
+	    'flex_category':'exact',
+	    'depart_date':kayak_date_1,
+	    'return_date':kayak_date_2,
+	    'oneway':'false',
+	    'origincode':start.upper(),
+	    'origin':start.upper(),
+	    'origin_location':'',
+	    'origin_code':'',
+	    'nearby_origin':'false',
+	    'destination':end.upper(),
+	    'destination_location':'',
+	    'destination_code':end.upper(),
+	    'nearby_destination':'false',
+	    'countrySearch':'false',
+	    'depart_date_canon':kayak_date_1,
+	    'return_date_canon':kayak_date_2,
+	    'travelers':'1',
+	    'adults':'1',
+	    'seniors':'0',
+	    'youth':'0',
+	    'child':'0',
+	    'seatInfant':'0',
+	    'lapInfant':'0',
+	    'cabin':'e',
+	    'cabinDisplayType':'Economy',
+	    'vertical':'flights',
+	    'url':kayak_url_to_append,
+	    'id':'',
+	    'navigateToResults':'false',
+	    'ajaxts':'',
+	    'scriptsMetadata':'',
+	    'stylesMetadata':'',
+	}
+
+	kayak_response = post(search_url, headers = headers, data = params, cookies = kayak_cookies)
+
+	return kayak_response
+
 	
 ###############################################################################
 # MAIN: 
@@ -526,97 +621,7 @@ else:
 	Web scraping from Kayak
 '''
 
-kayak_home_url = 'https://www.kayak.com'
-kayak_home_response = get(kayak_home_url)
-kayak_cookies = kayak_home_response.cookies
-
-kayak_search_url = kayak_home_url + '/s/horizon/flights/results/FlightSearchPoll'
-
-kayak_date_1 = date_1[6:10] + '-' + date_1[3:5] + '-' + date_1[0:2]
-
-kayak_url_to_append = 'flights/{0}-{1}/{2}'.format(start.upper(), end.upper(), kayak_date_1)
-
-kayak_date_2 = ''
-if is_return_trip():
-	kayak_date_2 = date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
-	kayak_url_to_append += '/' + kayak_date_2
-
-referer = kayak_home_url + '/' + kayak_url_to_append
-
-headers = {
-    'Host': 'www.kayak.com',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
-    'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': referer,
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'X-Requested-With': 'XMLHttpRequest'
-}
-
-params = {
-    'searchId':'',
-    'poll':'true',
-    'pollNumber':'0',
-    'applyFilters':'true',
-    'filterState':'',
-    'useViewStateFilterState':'false',
-    'pageNumber':'1',
-    'append':'false',
-    'pollingId':'593601',  #interesting. explore further
-    'requestReason':'POLL',
-    'isSecondPhase':'false',
-    'textAndPageLocations':'bottom,right',
-    'displayAdPageLocations':'none',
-    'existingAds':'false',
-    'activeLeg':'-1',
-    'view':'list',
-    'renderPlusMinusThreeFlex':'false',
-    'renderAirlineStopsMatrix':'false',
-    'renderFlexHeader':'true',
-    'tab':'flights',
-    'pageOrigin':'F..FD..M0',
-    'src':'',
-    'searchingAgain':'',
-    'c2s':'',
-    'po':'',
-    'personality':'',
-    'provider':'',
-    'isMulticity':'false',
-    'flex_category':'exact',
-    'depart_date':kayak_date_1,
-    'return_date':kayak_date_2,
-    'oneway':'false',
-    'origincode':start.upper(),  #change accordingly
-    'origin':start.upper(), #change accordingly
-    'origin_location':'', #change accordingly
-    'origin_code':'', #change accordingly
-    'nearby_origin':'false',
-    'destination':end.upper(), #change accordingly
-    'destination_location':'', #change accordingly
-    'destination_code':end.upper(), #change accordingly
-    'nearby_destination':'false',
-    'countrySearch':'false',
-    'depart_date_canon':kayak_date_1, #change accordingly
-    'return_date_canon':kayak_date_2, #change accordingly
-    'travelers':'1',
-    'adults':'1',
-    'seniors':'0',
-    'youth':'0',
-    'child':'0',
-    'seatInfant':'0',
-    'lapInfant':'0',
-    'cabin':'e',
-    'cabinDisplayType':'Economy',
-    'vertical':'flights',
-    'url':kayak_url_to_append,
-    'id':'',
-    'navigateToResults':'false',
-    'ajaxts':'',
-    'scriptsMetadata':'',
-    'stylesMetadata':'',
-}
-
-kayak_response = post(kayak_search_url, headers = headers, data = params, cookies = kayak_cookies)
+kayak_response = get_kayak_response()
 
 kayak_json = loads(kayak_response.text)
 
@@ -974,7 +979,6 @@ for flight in flights:
 	duration = flight['fly_duration']
 	
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
-	
 	return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
 	
 	stops = num_stops_to_text(len(departure_flights))
