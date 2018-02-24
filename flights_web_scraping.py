@@ -964,23 +964,6 @@ currency = kiwi_response_json['currency']
 
 exchange_rate = get_exchange_rate(currency)
 
-airline_code_search_params = {
-	'name': '',
-	'alias': '',
-	'iata': '',
-	'icao': '',
-	'country': 'ALL',
-	'callsign': '',
-	'mode': 'F',
-	'active': '',
-	'offset': '0',
-	'iatafilter': 'true',
-	'alid': '',
-	'action': 'SEARCH'
-}
-
-airline_code_search_url = 'https://openflights.org/php/alsearch.php'
-
 for flight in flights:
 	start_time_struct = time.gmtime(flight['dTime'])
 	start_time = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
@@ -1007,22 +990,16 @@ for flight in flights:
 		
 		duration_2 = flight['return_duration']
 		stops_2 = num_stops_to_text(len(return_flights))
+
+		airline = ( 'Multiple Airlines' if len(departure_flights > 1) 
+					else airline_code_to_name(next(iter(departure_flights))) )
+
+		airline_2 = ( 'Multiple Airlines' if len(return_flights > 1) 
+					else airline_code_to_name(next(iter(return_flights))) )
 				
-		if len(departure_flights) > 1:
-			airline = 'Multiple Airlines'
-		else:
-			airline = airline_code_to_name(next(iter(departure_flights)))
-			
-		if len(return_flights) > 1:
-			airline_2 = 'Multiple Airlines'
-		else:
-			airline_2 = airline_code_to_name(next(iter(departure_flights)))
-			
 	else:
-		if len(flight['airlines']) > 1:
-			airline = 'Multiple Airlines'
-		else:
-			airline = airline_code_to_name(flight['airlines'][0])
+		airline = ( 'Multiple Airlines' if len(departure_flights > 1) 
+					else airline_code_to_name(next(iter(departure_flights))) )
 	
 	price_number = flight['price']*exchange_rate
 	
