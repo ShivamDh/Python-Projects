@@ -391,18 +391,29 @@ def get_kayak_response():
 	referer = home_url + '/' + kayak_url_to_append
 
 	headers = {
-	    'Host': 'www.kayak.com',
-	    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
 	    'Accept': '*/*',
 	    'Accept-Language': 'en-US,en;q=0.9',
-	    'Referer': referer,
 	    'Content-Type': 'application/x-www-form-urlencoded',
+	    'Host': 'www.kayak.com',
+	    'Referer': referer,
+	    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
 	    'X-Requested-With': 'XMLHttpRequest'
 	}
 
 	oneway = str(not is_return_trip()).lower()
 
 	params = {
+	    'depart_date':kayak_date_1,
+	    'return_date':kayak_date_2,
+	    'oneway':oneway,
+	    'origin_code':start.upper(),
+	    'origincode':start.upper(),
+	    'origin':start.upper(),
+	    'destination':end.upper(),
+	    'destination_code':end.upper(),
+	    'depart_date_canon':kayak_date_1,
+	    'return_date_canon':kayak_date_2,
+	    'url':kayak_url_to_append,
 	    'searchId':'',
 	    'poll':'true',
 	    'pollNumber':'0',
@@ -452,26 +463,48 @@ def get_kayak_response():
 	    'ajaxts':'',
 	    'scriptsMetadata':'',
 	    'stylesMetadata':'',
-	    'depart_date':kayak_date_1,
-	    'return_date':kayak_date_2,
-	    'oneway':oneway,
-	    'origin_code':start.upper(),
-	    'origincode':start.upper(),
-	    'origin':start.upper(),
-	    'destination':end.upper(),
-	    'destination_code':end.upper(),
-	    'depart_date_canon':kayak_date_1,
-	    'return_date_canon':kayak_date_2,
-	    'url':kayak_url_to_append,
 	}
 
 	response = post(search_url, headers = headers, data = params, cookies = kayak_cookies)
 
 	return response
-
 	
+
+def get_flightnetwork_referer_url():
+	""" Inputs appropriate data into dict, to be used in API call for query parameter
+	
+	String concatenation used to avoid python KeyError when filling up flight_legs variable
+
+	Returns:
+		str: a referer search url used for query parameters in flightnetwork web scraping
+
+	"""
+
+	flight_legs = '[{"date":"{' + date_1[6:10] + '-' + date_1[3:5] + '-' + date_1[0:2]
+	flight_legs += '","destination":"' + end.upper() + '","origin":"' + start.upper() + '"}]'
+
+	if is_return_trip():
+		flight_legs = flight_legs[0:-1] + ',{"date":"{' + date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2]
+		flight_legs += '","destination":"' + start.upper() + '","origin":"' + end.upper() + '"}]'
+
+	trip_type = 'roundTrip' if is_return_trip() else 'oneway'
+		
+	referer_search = '{\
+		"tripType":"' + trip_type + '",\
+		"cabinClass":"economy",\
+		"stopsFilter":[],\
+		"legs":' + flight_legs + ',\
+		"passengers":{"adults":1,"children":0,"infants":0},\
+		"currency":{"code":"CAD"}\
+	}'
+
+	return referer_search.replace('\t', '')
+
+
+
+
 ###############################################################################
-# MAIN: 
+# MAIN
 	
 get_user_input()
 
@@ -527,11 +560,12 @@ if len(continued_results_divs) > 0:
 		
 		flights_2 = expedia_2_json['content']['legs']
 		
-		flights_2 = sorted(flights_2.items(), key=lambda x: x[1]['price']['exactPrice'])
-		flights_2 = flights_2[:10]
-		
 		flights = sorted(flights.items(), key=lambda x: x[1]['price']['exactPrice'])
+		flights_2 = sorted(flights_2.items(), key=lambda x: x[1]['price']['exactPrice'])
+		
+		# Limit 10 flights to each journey leg, can create 10x10 = 100 combinations of journeys 
 		flights = flights[:10]
+		flights_2 = flights_2[:10]
 		
 		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
 		
@@ -740,24 +774,7 @@ header = {
 	'Accept-Encoding': 'gzip, deflate, br'
 }
 
-flight_legs = '[{"date":"{'+date_1[6:10]+'-'+date_1[3:5]+'-'+date_1[0:2]+'","destination":"'+end.upper()+'","origin":"'+start.upper()+'"}]'
-
-if is_return_trip():
-	flight_legs = flight_legs[0:-1] + ',{"date":"{' + date_2[6:10] + '-' + date_2[3:5] + '-' + date_2[0:2] + '",'
-	flight_legs += '"destination":"' + start.upper() + '","origin":"' + end.upper() + '"}]'
-
-trip_type = 'roundTrip' if is_return_trip() else 'oneway'
-	
-referer_search = '{\
-	"tripType":"' + trip_type + '",\
-	"cabinClass":"economy",\
-	"stopsFilter":[],\
-	"legs":' + flight_legs + ',\
-	"passengers":{"adults":1,"children":0,"infants":0},\
-	"currency":{"code":"CAD"}\
-}'
-
-referer_search = referer_search.replace('\t', '')
+referer_search = get_flightnetwork_referer_url()
 
 referer = flightnetwork_home_url + 'en-CA/search?filter=' + quote(referer_search)
 
