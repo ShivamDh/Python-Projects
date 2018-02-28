@@ -501,6 +501,36 @@ def get_flightnetwork_referer_url():
 	return referer_search.replace('\t', '')
 
 
+def get_flightnetwork_response():
+
+
+def get_flightnetwork_itineraries(flightnetwork_id, header, url_cookies):
+	url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
+		flightnetwork_id, round(time.time()*1000)
+	)
+
+	response = get(url3, headers = header, cookies = url_cookies)
+	response_json = loads(response.text)
+
+	i = 0
+
+	while response_json['status'] == 'InProgress' :
+
+		# take a 2 second delay, try and see if backend querying is complete
+		time.sleep(2)
+		i += 1
+
+		response = get(url3, headers = header, cookies = url_cookies)
+		response_json = loads(response.text)
+		
+		# limit re-querying to 5 times (around 14+ sec delay)
+		# also break if over 100 results found already
+		if i >= 5 or len(response_json['itineraries']) > 100:
+			break
+		
+	# remove excess journeys from reponse, only take top 100
+	return response_json['itineraries'][0:100]
+
 
 
 ###############################################################################
@@ -766,12 +796,12 @@ flightnetwork_response = get(flightnetwork_home_url)
 flightnetwork_cookies = flightnetwork_response.cookies
 
 header = {
-	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
-	'Referer': flightnetwork_home_url,
-	'Host': 'www.flightnetwork.com',
 	'Accept': '*/*',
     'Accept-Language': 'en-US,en;q=0.9',
-	'Accept-Encoding': 'gzip, deflate, br'
+	'Accept-Encoding': 'gzip, deflate, br',
+	'Host': 'www.flightnetwork.com',
+	'Referer': flightnetwork_home_url,
+	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
 }
 
 referer_search = get_flightnetwork_referer_url()
@@ -795,38 +825,12 @@ while 'errors' in flightnetwork_search_resp_json:
 	if i >= 5:
 		raise ValueError()
 		
-header2 = {
-	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
-	'Referer': referer,
-	'Host': 'www.flightnetwork.com',
-	'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.9',
-	'Accept-Encoding': 'gzip, deflate, br',
-	'Connection': 'keep-alive'
-}
 
-url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
-	flightnetwork_search_resp_json['id'],
-	round(time.time()*1000)
-)
+header['Referer'] = referer
+header['Connection'] = 'keep-alive'
 
-resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
-resp2_json = loads(resp2.text)
+flights = get_flightnetwork_itineraries(flightnetwork_search_resp_json['id'], header, flightnetwork_cookies)
 
-i = 0
-
-while resp2_json['status'] == 'InProgress' :
-	time.sleep(2)
-	i += 1
-	resp2 = get(url3, headers = header2, cookies = flightnetwork_cookies)
-	resp2_json = loads(resp2.text)
-	
-	# limit re-querying to 7 times (around 14+ sec delay)
-	# also break if over 100 results found already
-	if i >= 7 or len(resp2_json['itineraries']) > 100:
-		break
-		
-flights = resp2_json['itineraries'][0:100]
 
 for flight in flights:
 	start_time = flight['legs'][0]['departureTime']
