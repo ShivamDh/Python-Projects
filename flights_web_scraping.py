@@ -529,6 +529,26 @@ def get_flightnetwork_itineraries(flightnetwork_id, header, home_cookies):
 	return response_json['itineraries'][0:100]
 
 
+def parse_flightcentre_airlines(resp_soup, key_dict):
+	""" Parses Beautiful response for flight key -> name mapping
+
+	Args:
+		airline_code (bs4.BeautifulSoup): Beautiful Soup response
+		key_dict (dict): Dict containing the key (IATA airline code) -> values (name)
+
+	"""
+
+	header = resp_soup.find_all('div', {'class': 'flightFilterHeader'}, string='Airlines')
+	labels = []
+
+	if len(header) > 0:
+		airline_filter_legend = header[0].find_next_sibling('div')
+		labels = airline_filter_legend.find_all('label') 
+	
+	for label in labels:
+		key_dict[label.input['value']] = label.text.strip()
+
+
 
 ###############################################################################
 # MAIN
@@ -878,7 +898,7 @@ for flight in flights:
 		
 
 '''
-	Web scraping from FlightCentre'
+	Web scraping from FlightCentre
 '''
 
 flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&departure={0}&destination={1}'.format(
@@ -902,16 +922,9 @@ flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
 
-airline_filter = flightcenter_soup.find_all('div', {'class': 'flightFilterHeader'}, string='Airlines')
-
 airline_keys = {}
 
-if len(airline_filter) > 0:
-	airline_filter_legend = airline_filter[0].find_next_sibling('div')
-	airline_labels = airline_filter_legend.find_all('label') 
-	
-	for label in airline_labels:
-		airline_keys[label.input['value']] = label.text.strip()
+parse_flightcentre_airlines(flightcenter_soup, airline_keys)
 	
 
 for flight in flights:
@@ -926,6 +939,10 @@ for flight in flights:
 	
 	airline_key = flight.find('img')['alt']
 	airline = airline_keys[airline_key]
+
+	f.write('FlightCenter,{0},{1},{2},{3},{4},'.format(
+		airline, start_time, end_time, duration, stops
+	))
 	
 	if is_return_trip():
 		form = flight.find('form')
@@ -946,15 +963,8 @@ for flight in flights:
 		# ignore the first one, which is the chosen departure flight
 		flights_2 = flights_2[1:]
 
-		airline_filter_2 = flightcenter_soup.find_all('div', {'class': 'flightFilterHeader'}, string='Airlines')
+		parse_flightcentre_airlines(flightcenter_soup_2, airline_keys)
 
-		if len(airline_filter_2) > 0:
-			airline_filter_legend_2 = airline_filter_2[0].find_next_sibling('div')
-			airline_labels_2 = airline_filter_legend_2.find_all('label') 
-			
-			for label_2 in airline_labels_2:
-				airline_keys[label_2.input['value']] = label_2.text.strip()
-		
 		for flight_2 in flights_2:
 			bold_texts_2 = flight_2.find_all('strong')
 			
@@ -968,11 +978,11 @@ for flight in flights:
 			airline_key_2 = flight_2.find('img')['alt']
 			airline_2 = airline_keys[airline_key_2]
 			
-			f.write('FlightCentre,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}\n'.format(
-				airline, start_time, end_time, duration, stops,
-				airline_2, start_time_2, end_time_2, duration_2, stops_2,
-				price
+			f.write('{0},{1},{2},{3},{4},'.format(
+				airline_2, start_time_2, end_time_2, duration_2, stops_2
 			))
+
+	f.write('{0}\n'.format(price))
 		
 '''
 	Web scraping from Kiwi
@@ -1014,14 +1024,14 @@ for flight in flights:
 		duration_2 = flight['return_duration']
 		stops_2 = num_stops_to_text(len(return_flights))
 
-		airline = ( 'Multiple Airlines' if len(departure_flights > 1) 
+		airline = ( 'Multiple Airlines' if len(departure_flights) > 1 
 					else airline_code_to_name(next(iter(departure_flights))) )
 
-		airline_2 = ( 'Multiple Airlines' if len(return_flights > 1) 
+		airline_2 = ( 'Multiple Airlines' if len(return_flights) > 1 
 					else airline_code_to_name(next(iter(return_flights))) )
 				
 	else:
-		airline = ( 'Multiple Airlines' if len(departure_flights > 1) 
+		airline = ( 'Multiple Airlines' if len(departure_flights) > 1 
 					else airline_code_to_name(next(iter(departure_flights))) )
 	
 	price_number = flight['price']*exchange_rate
