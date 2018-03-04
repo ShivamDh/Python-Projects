@@ -501,9 +501,52 @@ def get_flightnetwork_referer_url():
 	return referer_search.replace('\t', '')
 
 
-def get_flightnetwork_itineraries(flightnetwork_id, header, home_cookies):
+def get_flightnetwork_response(url, url_header, home_cookies):
+	referer_search = get_flightnetwork_referer_url()
+
+	referer = url + 'en-CA/search?filter=' + quote(referer_search)
+
+	search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
+
+	search_url = home_url + 'en-CA/api/flights/search/async?filter=' + quote(search)
+	search_resp = get(search_url, headers = url_header, cookies = home_cookies)
+	resp_json = loads(search_resp.text)
+
+	i = 0
+
+	while 'errors' in resp_json:
+		i += 1
+		search_resp = get(search_url, headers = url_header, cookies = home_cookies)
+		resp_json = loads(search_resp.text)
+		
+		# allow for 5 attempts of retrying GET request
+		if i >= 5:
+			raise ValueError()
+
+	return resp_json
+
+
+def get_flightnetwork_itineraries():
+	home_url = 'https://www.flightnetwork.com/'
+	home_response = get(home_url)
+	home_cookies = home_response.cookies
+
+	header = {
+		'Accept': '*/*',
+	    'Accept-Language': 'en-US,en;q=0.9',
+		'Accept-Encoding': 'gzip, deflate, br',
+		'Host': 'www.flightnetwork.com',
+		'Referer': home_url,
+		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+	}			
+
+	search_json = get_flightnetwork_response(home_url, header, home_cookies)
+
+	header['Referer'] = referer
+	header['Connection'] = 'keep-alive'
+
 	url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
-		flightnetwork_id, round(time.time()*1000)
+		search_json['id'], round(time.time()*1000)
 	)
 
 	response = get(url3, headers = header, cookies = home_cookies)
@@ -806,46 +849,7 @@ for flight in flights:
 
 # Web scraping from FlightNetwork
 
-flightnetwork_home_url = 'https://www.flightnetwork.com/'
-flightnetwork_response = get(flightnetwork_home_url)
-flightnetwork_cookies = flightnetwork_response.cookies
-
-header = {
-	'Accept': '*/*',
-    'Accept-Language': 'en-US,en;q=0.9',
-	'Accept-Encoding': 'gzip, deflate, br',
-	'Host': 'www.flightnetwork.com',
-	'Referer': flightnetwork_home_url,
-	'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
-}
-
-referer_search = get_flightnetwork_referer_url()
-
-referer = flightnetwork_home_url + 'en-CA/search?filter=' + quote(referer_search)
-
-flightnetwork_search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
-
-flightnetwork_search_url = flightnetwork_home_url + 'en-CA/api/flights/search/async?filter=' + quote(flightnetwork_search)
-flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
-flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
-
-i = 0
-
-while 'errors' in flightnetwork_search_resp_json:
-	i += 1
-	flightnetwork_search_resp = get(flightnetwork_search_url, headers = header, cookies=flightnetwork_cookies)
-	flightnetwork_search_resp_json = loads(flightnetwork_search_resp.text)
-	
-	# allow for 5 attempts of retrying GET request
-	if i >= 5:
-		raise ValueError()
-		
-
-header['Referer'] = referer
-header['Connection'] = 'keep-alive'
-
-flights = get_flightnetwork_itineraries(flightnetwork_search_resp_json['id'], header, flightnetwork_cookies)
-
+flights = get_flightnetwork_itineraries()
 
 for flight in flights:
 	start_time = flight['legs'][0]['departureTime']
