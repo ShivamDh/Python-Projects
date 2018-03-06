@@ -1,4 +1,4 @@
-from requests import get, post
+from requests import get, post, codes
 from bs4 import BeautifulSoup as soup
 from json import loads
 from datetime import date, timedelta
@@ -206,6 +206,32 @@ def get_user_input():
 	global sort_type
 	sort_type = sort_input.lower()
 	
+
+def safe_get(url, header = None, cookie = None):
+	""" Safe getter function to handle exceptions from requests library
+
+	Args:
+		url (str): the URL to be requested and data received from
+		header (dict): contains any request header parameters
+		cookie (dict): contains any cookies required for requests to website
+
+	Returns:
+		requests.models.Response: URL Response
+
+	"""
+
+	try:
+		response = get(url, headers = header, cookies = cookie)
+	except Exception:
+		print('Request not made, exited with an error for url:\n{0}'.format(url))
+		exit()
+
+	if response.status_code != codes.ok:
+		print('Request resulted with an error status code for url:\n{0}'.format(url))
+		exit()
+
+	return response
+
 	
 def build_expedia_url():
 	""" Build a url used to GET expedia results
@@ -281,7 +307,7 @@ def get_exchange_rate(initial_currency):
 	)
 
 	try:
-		response = get(url)
+		response = safe_get(url)
 		response_json = loads(response.text)
 	except Exception:
 		return 1
@@ -391,7 +417,7 @@ def get_kayak_response():
 	"""
 
 	home_url = 'https://www.kayak.com'
-	home_response = get(home_url)
+	home_response = safe_get(home_url)
 	kayak_cookies = home_response.cookies
 
 	search_url = home_url + '/s/horizon/flights/results/FlightSearchPoll'
@@ -525,15 +551,15 @@ def get_flightnetwork_response(url, url_header, home_cookies):
 
 	search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
 
-	search_url = home_url + 'en-CA/api/flights/search/async?filter=' + quote(search)
-	search_resp = get(search_url, headers = url_header, cookies = home_cookies)
+	search_url = url + 'en-CA/api/flights/search/async?filter=' + quote(search)
+	search_resp = safe_get(search_url, url_header, home_cookies)
 	resp_json = loads(search_resp.text)
 
 	i = 0
 
 	while 'errors' in resp_json:
 		i += 1
-		search_resp = get(search_url, headers = url_header, cookies = home_cookies)
+		search_resp = safe_get(search_url, url_header, home_cookies)
 		resp_json = loads(search_resp.text)
 		
 		# allow for 5 attempts of retrying GET request
@@ -552,7 +578,7 @@ def get_flightnetwork_itineraries():
 	"""
 
 	home_url = 'https://www.flightnetwork.com/'
-	home_response = get(home_url)
+	home_response = safe_get(home_url)
 	home_cookies = home_response.cookies
 
 	header = {
@@ -573,7 +599,7 @@ def get_flightnetwork_itineraries():
 		search_json['id'], round(time.time()*1000)
 	)
 
-	response = get(url, headers = header, cookies = home_cookies)
+	response = safe_get(url, header, home_cookies)
 	response_json = loads(response.text)
 
 	i = 0
@@ -584,7 +610,7 @@ def get_flightnetwork_itineraries():
 		time.sleep(2)
 		i += 1
 
-		response = get(url, headers = header, cookies = home_cookies)
+		response = safe_get(url, header, home_cookies)
 		response_json = loads(response.text)
 		
 		# limit re-querying to 5 times (around 14+ sec delay)
@@ -642,7 +668,7 @@ f.write(csv_headers)
 # Web scraping from Expedia
 
 expedia_url = build_expedia_url()
-expedia_response = get(expedia_url)
+expedia_response = safe_get(expedia_url)
 
 expedia_soup = soup(expedia_response.text, 'html.parser')
 
@@ -654,7 +680,7 @@ if len(continued_results_divs) > 0:
 		expedia_results_id
 	)
 	
-	expedia_results_response = get(expedia_results_url)
+	expedia_results_response = safe_get(expedia_results_url)
 	expedia_json = loads(expedia_results_response.text)
 	
 	flights = expedia_json['content']['legs']
@@ -669,7 +695,7 @@ if len(continued_results_divs) > 0:
 		
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
 		
-		expedia_results_2_response = get(expedia_results_2_url)
+		expedia_results_2_response = safe_get(expedia_results_2_url)
 		expedia_2_json = loads(expedia_results_2_response.text)
 		
 		flights_2 = expedia_2_json['content']['legs']
@@ -944,7 +970,7 @@ flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&sear
 	departure_date, return_date, 'RE' if is_return_trip() else 'OW'
 )
 
-flightcenter_response = get(flightcenter_url)
+flightcenter_response = safe_get(flightcenter_url)
 
 flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
@@ -1017,7 +1043,7 @@ for flight in flights:
 '''
 
 kiwi_url = build_kiwi_url()
-kiwi_response = get(kiwi_url)
+kiwi_response = safe_get(kiwi_url)
 
 kiwi_response_json = loads(kiwi_response.text)
 
