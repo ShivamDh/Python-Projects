@@ -9,6 +9,10 @@ from urllib.parse import quote #used to url encode and replace characters with %
 ONE_WAY_TRIP = '1'
 RETURN_TRIP = '2'
 
+SORT_BY_PRICE = 'p'
+SORT_BY_DURATION = 'd'
+SORT_BY_TIME = 't'
+
 FILE_NAME = 'flights.csv'
 
 ###############################################################################
@@ -18,6 +22,7 @@ start = ''
 end = ''
 date_1 = ''
 date_2 = ''
+sort_type = ''
 
 # Open CSV file to be used when writing all results
 f = open(FILE_NAME, 'w')
@@ -142,6 +147,10 @@ def validate_end_date(start_date, end_date):
 	return True
 	
 	
+def validate_sort_type(input_type):
+	return input_type.lower() in {SORT_BY_PRICE, SORT_BY_DURATION, SORT_BY_PRICE}
+
+
 def get_user_input():
 	""" Get user input from command line
 	
@@ -188,6 +197,14 @@ def get_user_input():
 		
 		global date_2
 		date_2 = date_2_input
+
+	print('How would you like the data formatted')
+	sort_input = input('p - Price, d = Duration, t = Time: ')
+	while not validate_sort_type(sort_input):
+		sort_input = input('Invalid sort type entered, enter p/d/t: ')
+
+	global sort_type
+	sort_type = sort_input.lower()
 	
 	
 def build_expedia_url():
@@ -527,6 +544,13 @@ def get_flightnetwork_response(url, url_header, home_cookies):
 
 
 def get_flightnetwork_itineraries():
+	""" Send requests and get flight itineraries from FlightNetwork
+
+	Returns:
+		list: The top 100 itineraries regarding one-way or return trips
+
+	"""
+
 	home_url = 'https://www.flightnetwork.com/'
 	home_response = get(home_url)
 	home_cookies = home_response.cookies
@@ -545,11 +569,11 @@ def get_flightnetwork_itineraries():
 	header['Referer'] = referer
 	header['Connection'] = 'keep-alive'
 
-	url3 = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
+	url = 'https://www.flightnetwork.com/en-CA/api/flights/results/async?sid={0}&limit=0&t={1}'.format(
 		search_json['id'], round(time.time()*1000)
 	)
 
-	response = get(url3, headers = header, cookies = home_cookies)
+	response = get(url, headers = header, cookies = home_cookies)
 	response_json = loads(response.text)
 
 	i = 0
@@ -560,7 +584,7 @@ def get_flightnetwork_itineraries():
 		time.sleep(2)
 		i += 1
 
-		response = get(url3, headers = header, cookies = home_cookies)
+		response = get(url, headers = header, cookies = home_cookies)
 		response_json = loads(response.text)
 		
 		# limit re-querying to 5 times (around 14+ sec delay)
