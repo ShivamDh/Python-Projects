@@ -73,7 +73,7 @@ def validate_airport(airport_code):
 		'offset': '0'
 	}
 	
-	response = post(url, data = params)
+	response = safe_post(url, params)
 	response_json = loads(response.text)
 	
 	# No airports matching the 3-digit airport code found
@@ -148,7 +148,7 @@ def validate_end_date(start_date, end_date):
 	
 	
 def validate_sort_type(input_type):
-	return input_type.lower() in {SORT_BY_PRICE, SORT_BY_DURATION, SORT_BY_PRICE}
+	return input_type.lower() in {SORT_BY_PRICE, SORT_BY_DURATION, SORT_BY_TIME}
 
 
 def get_user_input():
@@ -208,7 +208,7 @@ def get_user_input():
 	
 
 def safe_get(url, header = None, cookie = None):
-	""" Safe getter function to handle exceptions from requests library
+	""" Send out GET request and handle exceptions from requests library
 
 	Args:
 		url (str): the URL to be requested and data received from
@@ -222,6 +222,33 @@ def safe_get(url, header = None, cookie = None):
 
 	try:
 		response = get(url, headers = header, cookies = cookie)
+	except Exception:
+		print('Request not made, exited with an error for url:\n{0}'.format(url))
+		exit()
+
+	if response.status_code != codes.ok:
+		print('Request resulted with an error status code for url:\n{0}'.format(url))
+		exit()
+
+	return response
+
+
+def safe_post(url, params = None, header = None, cookie = None):
+	""" Send out POST request and handle any resulting exceptions from requests library
+
+	Args:
+		url (str): the URL to be requested and data received from
+		params (dict): any data to be sent with the POST request
+		header (dict): contains any request header parameters
+		cookie (dict): contains any cookies required for requests to website
+
+	Returns:
+		requests.models.Response: URL Response
+
+	"""
+
+	try:
+		response = post(url, data = params, headers = header, cookies = cookie)
 	except Exception:
 		print('Request not made, exited with an error for url:\n{0}'.format(url))
 		exit()
@@ -395,7 +422,7 @@ def airline_code_to_name(airline_code):
 
 	url = 'https://openflights.org/php/alsearch.php'	
 
-	response = post(url, data = params)
+	response = safe_post(url, params)
 	new_line_index = response.text.find('\n')
 
 	response_json = loads(response.text[new_line_index + 1:])
@@ -508,7 +535,7 @@ def get_kayak_response():
 	    'stylesMetadata':'',
 	}
 
-	response = post(search_url, headers = headers, data = params, cookies = kayak_cookies)
+	response = safe_post(search_url, params, headers, kayak_cookies)
 
 	return response
 	
@@ -544,10 +571,7 @@ def get_flightnetwork_referer_url():
 	return referer_search.replace('\t', '')
 
 
-def get_flightnetwork_response(url, url_header, home_cookies):
-	referer_search = get_flightnetwork_referer_url()
-
-	referer = url + 'en-CA/search?filter=' + quote(referer_search)
+def get_flightnetwork_response(url, url_header, home_cookies, referer_search):
 
 	search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
 
@@ -564,7 +588,8 @@ def get_flightnetwork_response(url, url_header, home_cookies):
 		
 		# allow for 5 attempts of retrying GET request
 		if i >= 5:
-			raise ValueError()
+			print('Error in getting data from FlightNetwork')
+			return None
 
 	return resp_json
 
@@ -590,7 +615,13 @@ def get_flightnetwork_itineraries():
 		'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
 	}			
 
-	search_json = get_flightnetwork_response(home_url, header, home_cookies)
+	referer_search = get_flightnetwork_referer_url()
+
+	search_json = get_flightnetwork_response(home_url, header, home_cookies, referer_search)
+	if search_json is None:
+		return []
+
+	referer = home_url + 'en-CA/search?filter=' + quote(referer_search)
 
 	header['Referer'] = referer
 	header['Connection'] = 'keep-alive'
@@ -758,7 +789,8 @@ if len(continued_results_divs) > 0:
 			
 			stops = num_stops_to_text(flights[key]['formattedStops'])
 
-			f.write('Expedia,{0},{1},{2},{2},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+			f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+			raise ValueError()
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
@@ -1008,7 +1040,7 @@ for flight in flights:
 		for input in inputs:
 			params[input['name']] = input['value']
 		
-		flightcenter_response_2 = post(flightcenter_url_2, data = params)
+		flightcenter_response_2 = safe_post(flightcenter_url_2, params)
 		
 		flightcenter_soup_2 = soup(flightcenter_response_2.text, 'html.parser')
 
