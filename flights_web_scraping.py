@@ -540,6 +540,13 @@ def get_kayak_response():
 	return response
 	
 
+def parse_kayak_html(elements, required_count):
+	if len(elements) < required_count:
+		return ''
+	else:
+		return elements[0].div.text.strip().replace('\n', '')
+
+
 def get_flightnetwork_referer_url():
 	""" Inputs appropriate data into dict, to be used in API call for query parameter
 	
@@ -840,40 +847,19 @@ flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem
 
 for flight in flights:
 	start_time_divs = flight.find_all('div', {'class': 'depart'})
-	if len(start_time_divs) < 1:
-		start_time = ''
-	else:
-		start_time = start_time_divs[0].div.text.strip().replace('\n', '')
-		
-	if is_return_trip():
-		if len(start_time_divs) < 2:
-			start_time_2 = ''
-		else:
-			start_time_2 = start_time_divs[1].div.text.strip().replace('\n', '')
+	start_time = parse_kayak_html(start_time_divs, 1)
 
 	end_time_divs = flight.find_all('div', {'class': 'return'})
 	if len(end_time_divs) < 1:
 		end_time = ''
 	else:
 		end_time = end_time_divs[0].div.text.strip().replace('\n', '')
-		
-	if is_return_trip():
-		if len(end_time_divs) < 2:
-			end_time_2 = ''
-		else:
-			end_time_2 = end_time_divs[1].div.text.strip().replace('\n', '')
 	
 	duration_divs = flight.find_all('div', {'class': 'duration'})
 	if len(duration_divs) < 1:
 		duration = ''
 	else:
 		duration = duration_divs[0].div.text.strip().replace('\n', '')
-
-	if is_return_trip():
-		if len(duration_divs) < 2:
-			duration_2 = ''
-		else:
-			duration_2 = duration_divs[1].div.text.strip().replace('\n', '')
 		
 	airline_divs = flight.find_all('div', {'class': 'carrier'})
 	if len(airline_divs) < 1:
@@ -884,16 +870,6 @@ for flight in flights:
 			airline = airline_inner_divs[-1].text.strip()
 		else:
 			airline = ''
-			
-	if is_return_trip():
-		if len(airline_divs) < 2:
-			airline_2 = ''
-		else:
-			airline_inner_divs_2 = airline_divs[1].find_all('div')
-			if len(airline_inner_divs_2) > 0:
-				airline_2 = airline_inner_divs_2[-1].text.strip()
-			else:
-				airline_2 = ''
 			
 	stops_divs = flight.find_all('div', {'class': 'stops'})
 	if len(stops_divs) < 1:
@@ -906,7 +882,35 @@ for flight in flights:
 			num_stops = len(stops_inner_spans.find_all('span', {'class': 'dot'}))
 			stops = num_stops_to_text(num_stops)
 	
+	price = parse_html_for_info(flight, 'span', {'class': 'price'})
+
+	f.write('Kayak,{0},{1},{2},{3},{4},'.format(airline, start_time, end_time, duration, stops))
+	
 	if is_return_trip():
+		if len(start_time_divs) < 2:
+			start_time_2 = ''
+		else:
+			start_time_2 = start_time_divs[1].div.text.strip().replace('\n', '')
+
+		if len(end_time_divs) < 2:
+			end_time_2 = ''
+		else:
+			end_time_2 = end_time_divs[1].div.text.strip().replace('\n', '')
+
+		if len(duration_divs) < 2:
+			duration_2 = ''
+		else:
+			duration_2 = duration_divs[1].div.text.strip().replace('\n', '')
+
+		if len(airline_divs) < 2:
+			airline_2 = ''
+		else:
+			airline_inner_divs_2 = airline_divs[1].find_all('div')
+			if len(airline_inner_divs_2) > 0:
+				airline_2 = airline_inner_divs_2[-1].text.strip()
+			else:
+				airline_2 = ''
+
 		if len(stops_divs) < 2:
 			stops_2 = ''
 		else:
@@ -917,11 +921,6 @@ for flight in flights:
 				num_stops_2 = len(stops_inner_spans_2.find_all('span', {'class': 'dot'}))
 				stops_2 = num_stops_to_text(num_stops_2)
 
-	price = parse_html_for_info(flight, 'span', {'class': 'price'})
-
-	f.write('Kayak,{0},{1},{2},{3},{4},'.format(airline, start_time, end_time, duration, stops))
-	
-	if is_return_trip():
 		f.write('{0},{1},{2},{3},{4},'.format(
 			airline_2, start_time_2, end_time_2, duration_2, stops_2
 		))
