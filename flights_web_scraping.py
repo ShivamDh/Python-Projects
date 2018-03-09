@@ -544,7 +544,20 @@ def parse_kayak_html(elements, required_count):
 	if len(elements) < required_count:
 		return ''
 	else:
-		return elements[0].div.text.strip().replace('\n', '')
+		return elements[required_count-1].div.text.strip().replace('\n', '')
+
+
+def get_kayak_stops(stops_divs, count_needed):
+	if len(stops_divs) < count_needed:
+		return ''
+	else:
+		stops_inner_spans = stops_divs[count_needed-1].find('span', {'class': 'axis'})
+		if stops_inner_spans is None:
+			return ''
+		else:
+			num_stops = len(stops_inner_spans.find_all('span', {'class': 'dot'}))
+			return num_stops_to_text(num_stops)
+
 
 
 def get_flightnetwork_referer_url():
@@ -850,17 +863,11 @@ for flight in flights:
 	start_time = parse_kayak_html(start_time_divs, 1)
 
 	end_time_divs = flight.find_all('div', {'class': 'return'})
-	if len(end_time_divs) < 1:
-		end_time = ''
-	else:
-		end_time = end_time_divs[0].div.text.strip().replace('\n', '')
-	
+	end_time = parse_kayak_html(end_time_divs, 1)
+
 	duration_divs = flight.find_all('div', {'class': 'duration'})
-	if len(duration_divs) < 1:
-		duration = ''
-	else:
-		duration = duration_divs[0].div.text.strip().replace('\n', '')
-		
+	duration = parse_kayak_html(duration_divs, 1)
+
 	airline_divs = flight.find_all('div', {'class': 'carrier'})
 	if len(airline_divs) < 1:
 		airline = ''
@@ -872,35 +879,16 @@ for flight in flights:
 			airline = ''
 			
 	stops_divs = flight.find_all('div', {'class': 'stops'})
-	if len(stops_divs) < 1:
-		stops = ''
-	else:
-		stops_inner_spans = stops_divs[0].find('span', {'class': 'axis'})
-		if stops_inner_spans is None:
-			stops = ''
-		else:
-			num_stops = len(stops_inner_spans.find_all('span', {'class': 'dot'}))
-			stops = num_stops_to_text(num_stops)
+	stops = get_kayak_stops(stops_divs, 1)
 	
 	price = parse_html_for_info(flight, 'span', {'class': 'price'})
 
 	f.write('Kayak,{0},{1},{2},{3},{4},'.format(airline, start_time, end_time, duration, stops))
 	
 	if is_return_trip():
-		if len(start_time_divs) < 2:
-			start_time_2 = ''
-		else:
-			start_time_2 = start_time_divs[1].div.text.strip().replace('\n', '')
-
-		if len(end_time_divs) < 2:
-			end_time_2 = ''
-		else:
-			end_time_2 = end_time_divs[1].div.text.strip().replace('\n', '')
-
-		if len(duration_divs) < 2:
-			duration_2 = ''
-		else:
-			duration_2 = duration_divs[1].div.text.strip().replace('\n', '')
+		start_time_2 = parse_kayak_html(start_time_divs, 2)
+		end_time_2 = parse_kayak_html(end_time_divs, 2)
+		duration_2 = parse_kayak_html(duration_divs, 2)
 
 		if len(airline_divs) < 2:
 			airline_2 = ''
@@ -911,15 +899,7 @@ for flight in flights:
 			else:
 				airline_2 = ''
 
-		if len(stops_divs) < 2:
-			stops_2 = ''
-		else:
-			stops_inner_spans_2 = stops_divs[0].find('span', {'class': 'axis'})
-			if stops_inner_spans_2 is None:
-				stops_2 = ''
-			else:
-				num_stops_2 = len(stops_inner_spans_2.find_all('span', {'class': 'dot'}))
-				stops_2 = num_stops_to_text(num_stops_2)
+		stops_2 = get_kayak_stops(stops_divs, 2)
 
 		f.write('{0},{1},{2},{3},{4},'.format(
 			airline_2, start_time_2, end_time_2, duration_2, stops_2
