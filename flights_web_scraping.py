@@ -535,12 +535,21 @@ def get_kayak_response():
 		'stylesMetadata':'',
 	}
 
-	response = safe_post(search_url, params, headers, kayak_cookies)
-
-	return response
+	return safe_post(search_url, params, headers, kayak_cookies)
 	
 
 def parse_kayak_html(elements, required_count):
+	""" Simple parsing for kayak elements, reduce duplicate code
+
+	Args:
+		elements (list): list of elements matching desired information
+		required_count (int): require minimum number in the list for info to be parsed
+	
+	Returns:
+		str: Stops in a text format
+
+	"""
+
 	if len(elements) < required_count:
 		return ''
 	else:
@@ -548,6 +557,18 @@ def parse_kayak_html(elements, required_count):
 
 
 def get_kayak_stops(stops_divs, count_needed):
+	""" Overriding the previous method, specifically for stops, which require extra logic
+
+	Args:
+		elements (list): list of elements matching desired information
+		required_count (int): require minimum number in the list for info to be parsed
+	
+	Returns:
+		str: Stops in a text format
+
+	"""
+
+
 	if len(stops_divs) < count_needed:
 		return ''
 	else:
@@ -836,10 +857,8 @@ else:
 			price = ''
 		else:
 			price_spans = price_column_div.div.findAll('span')
-			if len(price_spans) == 0:
-				price = ''
-			else:
-				price = price_spans[-1].text.strip().replace(',', '')
+			price = ( '' if len(price_spans) == 0
+					  else price = price_spans[-1].text.strip().replace(',', '') )
 			
 		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(
 			airline, start_time, end_time, duration, stops, price
@@ -873,11 +892,8 @@ for flight in flights:
 		airline = ''
 	else:
 		airline_inner_divs = airline_divs[0].find_all('div')
-		if len(airline_inner_divs) > 0:
-			airline = airline_inner_divs[-1].text.strip()
-		else:
-			airline = ''
-			
+		airline = '' if len(airline_inner_divs) < 1 else airline_inner_divs[-1].text.strip()
+
 	stops_divs = flight.find_all('div', {'class': 'stops'})
 	stops = get_kayak_stops(stops_divs, 1)
 	
@@ -894,10 +910,7 @@ for flight in flights:
 			airline_2 = ''
 		else:
 			airline_inner_divs_2 = airline_divs[1].find_all('div')
-			if len(airline_inner_divs_2) > 0:
-				airline_2 = airline_inner_divs_2[-1].text.strip()
-			else:
-				airline_2 = ''
+			airline_2 = '' if len(airline_inner_divs_2) < 1 else airline_inner_divs_2[-1].text.strip()
 
 		stops_2 = get_kayak_stops(stops_divs, 2)
 
@@ -922,10 +935,7 @@ for flight in flights:
 	segments = flight['legs'][0]['segments']
 	one_airline = all(segment['marketing']['code'] == segments[0]['marketing']['code'] for segment in segments)
 	
-	if one_airline:
-		airline = segments[0]['marketing']['name']
-	else:
-		airline = 'Multiple Airlines'
+	airline = segments[0]['marketing']['name'] if one_airline else 'Multiple Airlines' 
 	
 	num_stops = len(segments) - 1
 	stops = num_stops_to_text(num_stops)
@@ -942,11 +952,8 @@ for flight in flights:
 		segments_2 = flight['legs'][1]['segments']
 		one_airline_2 = all(segment_2['marketing']['code'] == segments_2[0]['marketing']['code'] for segment_2 in segments_2)
 		
-		if one_airline_2:
-			airline_2 = segments_2[0]['marketing']['name']
-		else:
-			airline_2 = 'Multiple Airlines'
-			
+		airline_2 = segments_2[0]['marketing']['name'] if one_airline_2 else 'Multiple Airlines' 
+
 		num_stops_2 = len(segments_2) - 1
 		stops_2 = num_stops_to_text(num_stops_2)
 		
@@ -962,20 +969,14 @@ for flight in flights:
 	f.write('{0}\n'.format(price))
 		
 
-'''
-	Web scraping from FlightCentre
-'''
+# Web scraping from FlightCentre
 
 flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&departure={0}&destination={1}'.format(
 	start.upper(), end.upper()
 )
 
 departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
-
-if is_return_trip():
-	return_date = date_2[6:10] + date_2[3:5] + date_2[0:2]
-else:
-	return_date = departure_date
+return_date = depart_date if not is_return_trip() else  date_2[6:10] + date_2[3:5] + date_2[0:2]
 
 flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&searchtype=RE'.format(
 	departure_date, return_date, 'RE' if is_return_trip() else 'OW'
@@ -986,11 +987,9 @@ flightcenter_response = safe_get(flightcenter_url)
 flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
-
 airline_keys = {}
 
 parse_flightcentre_airlines(flightcenter_soup, airline_keys)
-	
 
 for flight in flights:
 	bold_texts = flight.find_all('strong')
@@ -1049,9 +1048,7 @@ for flight in flights:
 
 	f.write('{0}\n'.format(price))
 		
-'''
-	Web scraping from Kiwi
-'''
+# Web scraping from Kiwi
 
 kiwi_url = build_kiwi_url()
 kiwi_response = safe_get(kiwi_url)
