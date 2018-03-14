@@ -24,8 +24,8 @@ date_1 = ''
 date_2 = ''
 sort_type = ''
 
-# Open CSV file to be used when writing all results
-f = open(FILE_NAME, 'w')
+# Store all data found on websites into an array
+csv_flights = []
 
 ###############################################################################
 
@@ -199,7 +199,7 @@ def get_user_input():
 		date_2 = date_2_input
 
 	print('How would you like the data formatted')
-	sort_input = input('p - Price, d = Duration, t = Time: ')
+	sort_input = input(' p - Price, d = Duration, t = Time: ')
 	while not validate_sort_type(sort_input):
 		sort_input = input('Invalid sort type entered, enter p/d/t: ')
 
@@ -580,7 +580,6 @@ def get_kayak_stops(stops_divs, count_needed):
 			return num_stops_to_text(num_stops)
 
 
-
 def get_flightnetwork_referer_url():
 	""" Inputs appropriate data into dict, to be used in API call for query parameter
 	
@@ -720,23 +719,6 @@ def parse_flightcentre_airlines(resp_soup, key_dict):
 	
 get_user_input()
 
-
-# Write CSV Headers to file
-
-csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops,'.format(
-	start.upper(), end.upper()
-)
-
-if is_return_trip():
-	csv_headers += 'Airline,Start ({0}),End({1}),Duration,Stops,'.format(
-		end.upper(), start.upper()
-	)
-
-csv_headers += 'Price\n\n'
-
-f.write(csv_headers)
-
-
 # Web scraping from Expedia
 
 expedia_url = build_expedia_url()
@@ -831,39 +813,37 @@ if len(continued_results_divs) > 0:
 			stops = num_stops_to_text(flights[key]['formattedStops'])
 
 			f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
-			raise ValueError()
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
 	
 	for flight in flights:
+		flight_obj = {}
 
-		start_time = parse_html_for_info(flight, 'span', {'data-test-id': 'departure-time'})
-		end_time = parse_html_for_info(flight, 'span', {'data-test-id': 'arrival-time'})
+		flight_obj['start_time'] = parse_html_for_info(flight, 'span', {'data-test-id': 'departure-time'})
+		flight_obj['end_time'] = parse_html_for_info(flight, 'span', {'data-test-id': 'arrival-time'})
 
-		duration = parse_html_for_info(flight, 'span', {'data-test-id': 'duration'})
-		airline = parse_html_for_info(flight, 'div', {'data-test-id': 'airline-name'})
+		flight_obj['duration'] = parse_html_for_info(flight, 'span', {'data-test-id': 'duration'})
+		flight_obj['airline'] = parse_html_for_info(flight, 'div', {'data-test-id': 'airline-name'})
 
 		duration_span = flight.find('span', {'data-test-id': 'duration'})		
 		stops_span = duration_span.find_next_sibling('span') 
 
 		if stops_span is None or not stops_span.has_attr('data-test-num-stops'):
-			stops = ''
+			flight_obj['stops'] = ''
 		else:
-			stops = stops_span.text.strip().replace('(', '').replace(')','')
+			flight_obj['stops'] = stops_span.text.strip().replace('(', '').replace(')','')
 		
 		price_column_div = flight.find('div', {'data-test-id': 'price-column'})   
 		if price_column_div is None:
-			price = ''
+			flight_obj['price'] = ''
 		else:
 			price_spans = price_column_div.div.findAll('span')
-			price = ( '' if len(price_spans) == 0
-					  else price = price_spans[-1].text.strip().replace(',', '') )
-			
-		f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(
-			airline, start_time, end_time, duration, stops, price
-		))
+			flight_obj['price'] = ( '' if len(price_spans) == 0
+									else price_spans[-1].text.strip().replace(',', '') )
 
+	csv_flights.append(flight_obj)
+	
 
 '''
 	Web scraping from Kayak
@@ -976,7 +956,7 @@ flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&d
 )
 
 departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
-return_date = depart_date if not is_return_trip() else  date_2[6:10] + date_2[3:5] + date_2[0:2]
+return_date = departure_date if not is_return_trip() else  date_2[6:10] + date_2[3:5] + date_2[0:2]
 
 flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&searchtype=RE'.format(
 	departure_date, return_date, 'RE' if is_return_trip() else 'OW'
@@ -1109,5 +1089,37 @@ for flight in flights:
 		
 	f.write(',{0}\n'.format(price))
 	
+
+
+
+
+
+
+# Open CSV file to be used when writing all results
+f = open(FILE_NAME, 'w')
+
+# Write CSV Headers to file
+csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops,'.format(
+	start.upper(), end.upper()
+)
+
+if is_return_trip():
+	csv_headers += 'Airline,Start ({0}),End({1}),Duration,Stops,'.format(
+		end.upper(), start.upper()
+	)
+
+csv_headers += 'Price\n\n'
+
+f.write(csv_headers)
+
+flight_keys = list(csv_flights[0].keys())
+
+for flight in csv_flights:
+	flight_string = ''
+	for flight_key in flight_keys:
+		flight_string += flight[flight_key] + ','
+	f.write(flight_string[:-1] + '\n')
+
+f.write ()
 
 f.close()
