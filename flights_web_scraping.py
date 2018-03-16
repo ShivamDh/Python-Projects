@@ -764,67 +764,67 @@ if len(continued_results_divs) > 0:
 		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
 		
 		for flight in flights:
-			start_time = flight[1]['departureTime']['time']
-			end_time = flight[1]['arrivalTime']['time']
+			flight_obj = {'website': 'Expedia'}
+
+			flight_obj['airline'] = flight[1]['carrierSummary']['airlineName']
+			if flight_obj['airline'] == '':
+				flight_obj['airline'] = 'Multiple Airlines'
+
+			flight_obj['start_time'] = flight[1]['departureTime']['time']
+			flight_obj['end_time'] = flight[1]['arrivalTime']['time']
 			
-			duration = str(flight[1]['duration']['hours']) + 'h ' + str(flight[1]['duration']['minutes']) + 'm'
-			price = flight[1]['price']['formattedPrice'][0:2] + flight[1]['price']['totalPriceAsDecimalString']
+			flight_duration = flight[1]['duration'] 
+
+			flight_obj['duration'] = str(flight_duration['hours']) + 'h ' + str(flight_duration['minutes']) + 'm'
+			flight_obj['stops'] = num_stops_to_text(flight[1]['formattedStops'])
 			
-			airline = flight[1]['carrierSummary']['airlineName']
-			if airline == '':
-				airline = 'Multiple Airlines'
-			
-			stops = num_stops_to_text(flight[1]['formattedStops'])
-			
+			flight_obj['price'] = flight[1]['price']['totalPriceAsDecimalString']
+						
 			for flight_2 in flights_2:
-				start_time_2 = flight_2[1]['departureTime']['time']
-				end_time_2 = flight_2[1]['arrivalTime']['time']
+				flight_obj_2 = flight_obj.copy()
+
+				flight_obj_2['airline_2'] = flight_2[1]['carrierSummary']['airlineName']
+				if flight_obj_2['airline_2'] == '':
+					flight_obj_2['airline_2'] = 'Multiple Airlines'
+				
+				flight_obj_2['start_time_2'] = flight_2[1]['departureTime']['time']
+				flight_obj_2['end_time_2'] = flight_2[1]['arrivalTime']['time']
+				
+				flight_duration = flight_2[1]['duration'];
+				flight_obj['duration_2'] = str(flight_duration['hours']) + 'h ' + str(flight_duration['minutes']) + 'm'
 			
-				duration_2 = str(flight_2[1]['duration']['hours']) + 'h ' + str(flight_2[1]['duration']['minutes']) + 'm'
-				
-				airline_2 = flight_2[1]['carrierSummary']['airlineName']
-				if airline_2 == '':
-					airline_2 = 'Multiple Airlines'
-				
-				stops_2 = num_stops_to_text(flight_2[1]['formattedStops'])
-				
-				f.write('Expedia,{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}'.format(
-					airline, start_time, end_time, duration, stops,
-					airline_2, start_time_2, end_time_2, duration_2, stops_2
-				))
+				flight_obj['stops_2'] = num_stops_to_text(flight_2[1]['formattedStops'])
 				
 				price_2 = flight_2[1]['price']['exactPrice'] + flight[1]['price']['exactPrice'] - cheapest_first_leg_flight
-				final_price = flight_2[1]['price']['formattedPrice'][0:2] + "{:.2f}".format(float(price_2))
-				
-				f.write(',{0}\n'.format(final_price))
+				flight_obj['price_2'] = float("{:.2f}".format(float(price_2)))
 		
 	else:
 		for key in flights:
-			start_time = flights[key]['departureTime']['time']
-			end_time = flights[key]['arrivalTime']['time']
-			
-			duration = str(flights[key]['duration']['hours']) + 'h ' + str(flights[key]['duration']['minutes']) + 'm'
-			price = flights[key]['price']['formattedPrice'][0:2] + flights[key]['price']['totalPriceAsDecimalString']
-			
-			airline = flights[key]['carrierSummary']['airlineName']
-			if airline == '':
-				airline = 'Multiple Airlines'
-			
-			stops = num_stops_to_text(flights[key]['formattedStops'])
+			flight_obj = {'website': 'Expedia'}
 
-			f.write('Expedia,{0},{1},{2},{3},{4},{5}\n'.format(airline, start_time, end_time, duration, stops, price))
+			flight_obj['airline'] = flights[key]['carrierSummary']['airlineName']
+			if flight_obj['airline'] == '':
+				flight_obj['airline'] = 'Multiple Airlines'
+
+			flight_obj['start_time'] = flights[key]['departureTime']['time']
+			flight_obj['end_time'] = flights[key]['arrivalTime']['time']
+			
+			flight_obj['duration'] = str(flights[key]['duration']['hours']) + 'h ' + str(flights[key]['duration']['minutes']) + 'm'
+			flight_obj['stops'] = num_stops_to_text(flights[key]['formattedStops'])
+			flight_obj['price'] = flights[key]['price']['totalPriceAsDecimalString']
+
+			csv_flights.append(flight_obj)
 	
 else:
 	flights = expedia_soup.find_all('li', {'class': 'flight-module'})
 	
 	for flight in flights:
-		flight_obj = {}
+		flight_obj = {'website': 'Expedia'}
 
+		flight_obj['airline'] = parse_html_for_info(flight, 'div', {'data-test-id': 'airline-name'})
 		flight_obj['start_time'] = parse_html_for_info(flight, 'span', {'data-test-id': 'departure-time'})
 		flight_obj['end_time'] = parse_html_for_info(flight, 'span', {'data-test-id': 'arrival-time'})
-
 		flight_obj['duration'] = parse_html_for_info(flight, 'span', {'data-test-id': 'duration'})
-		flight_obj['airline'] = parse_html_for_info(flight, 'div', {'data-test-id': 'airline-name'})
 
 		duration_span = flight.find('span', {'data-test-id': 'duration'})		
 		stops_span = duration_span.find_next_sibling('span') 
@@ -843,7 +843,7 @@ else:
 									else price_spans[-1].text.strip().replace(',', '') )
 
 	csv_flights.append(flight_obj)
-	
+
 
 '''
 	Web scraping from Kayak
