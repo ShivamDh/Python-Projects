@@ -283,6 +283,33 @@ def build_expedia_url():
 	url += '&passengers=adults%3A1&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.ca'
 	
 	return url
+
+
+def parse_expedia_flight(flight):
+	""" Parses an Expedia flight json reponse to obtain critical information
+
+	Args:
+		flight (dict): The JSON response obtained from request for a particular flight route
+
+	Returns:
+		dict: A dictionary containing the required information for an Expedia journey
+
+	"""
+
+	flight_object = {'website': 'Expedia'}
+
+	flight_object['airline'] = flight['carrierSummary']['airlineName']
+	if flight_object['airline'] == '':
+		flight_object['airline'] = 'Multiple Airlines'
+
+	flight_object['start_time'] = flight['departureTime']['time']
+	flight_object['end_time'] = flight['arrivalTime']['time']
+	
+	flight_object['duration'] = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
+	flight_object['stops'] = num_stops_to_text(flight['formattedStops'])
+	flight_object['price'] = flight['price']['totalPriceAsDecimalString']
+
+	return flight_object
 	
 
 def build_kiwi_url():
@@ -800,19 +827,7 @@ if len(continued_results_divs) > 0:
 		
 	else:
 		for key in flights:
-			flight_obj = {'website': 'Expedia'}
-
-			flight_obj['airline'] = flights[key]['carrierSummary']['airlineName']
-			if flight_obj['airline'] == '':
-				flight_obj['airline'] = 'Multiple Airlines'
-
-			flight_obj['start_time'] = flights[key]['departureTime']['time']
-			flight_obj['end_time'] = flights[key]['arrivalTime']['time']
-			
-			flight_obj['duration'] = str(flights[key]['duration']['hours']) + 'h ' + str(flights[key]['duration']['minutes']) + 'm'
-			flight_obj['stops'] = num_stops_to_text(flights[key]['formattedStops'])
-			flight_obj['price'] = flights[key]['price']['totalPriceAsDecimalString']
-
+			flight_obj = parse_expedia_flight(flights[key])
 			csv_flights.append(flight_obj)
 	
 else:
@@ -1119,7 +1134,5 @@ for flight in csv_flights:
 	for flight_key in flight_keys:
 		flight_string += flight[flight_key] + ','
 	f.write(flight_string[:-1] + '\n')
-
-f.write ()
 
 f.close()
