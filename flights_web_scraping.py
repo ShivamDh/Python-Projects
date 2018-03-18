@@ -791,22 +791,8 @@ if len(continued_results_divs) > 0:
 		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
 		
 		for flight in flights:
-			flight_obj = {'website': 'Expedia'}
+			flight_obj = parse_expedia_flight(flight[1])
 
-			flight_obj['airline'] = flight[1]['carrierSummary']['airlineName']
-			if flight_obj['airline'] == '':
-				flight_obj['airline'] = 'Multiple Airlines'
-
-			flight_obj['start_time'] = flight[1]['departureTime']['time']
-			flight_obj['end_time'] = flight[1]['arrivalTime']['time']
-			
-			flight_duration = flight[1]['duration'] 
-
-			flight_obj['duration'] = str(flight_duration['hours']) + 'h ' + str(flight_duration['minutes']) + 'm'
-			flight_obj['stops'] = num_stops_to_text(flight[1]['formattedStops'])
-			
-			flight_obj['price'] = flight[1]['price']['totalPriceAsDecimalString']
-						
 			for flight_2 in flights_2:
 				flight_obj_2 = flight_obj.copy()
 
@@ -818,12 +804,14 @@ if len(continued_results_divs) > 0:
 				flight_obj_2['end_time_2'] = flight_2[1]['arrivalTime']['time']
 				
 				flight_duration = flight_2[1]['duration'];
-				flight_obj['duration_2'] = str(flight_duration['hours']) + 'h ' + str(flight_duration['minutes']) + 'm'
+				flight_obj_2['duration_2'] = str(flight_duration['hours']) + 'h ' + str(flight_duration['minutes']) + 'm'
 			
-				flight_obj['stops_2'] = num_stops_to_text(flight_2[1]['formattedStops'])
+				flight_obj_2['stops_2'] = num_stops_to_text(flight_2[1]['formattedStops'])
 				
 				price_2 = flight_2[1]['price']['exactPrice'] + flight[1]['price']['exactPrice'] - cheapest_first_leg_flight
-				flight_obj['price_2'] = float("{:.2f}".format(float(price_2)))
+				flight_obj_2['price_2'] = float("{:.2f}".format(float(price_2)))
+
+				csv_flights.append(flight_obj_2)
 		
 	else:
 		for key in flights:
@@ -873,47 +861,42 @@ kayak_soup = soup(kayak_json['content'], 'html.parser')
 flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
 
 for flight in flights:
-	start_time_divs = flight.find_all('div', {'class': 'depart'})
-	start_time = parse_kayak_html(start_time_divs, 1)
-
-	end_time_divs = flight.find_all('div', {'class': 'return'})
-	end_time = parse_kayak_html(end_time_divs, 1)
-
-	duration_divs = flight.find_all('div', {'class': 'duration'})
-	duration = parse_kayak_html(duration_divs, 1)
+	flight_obj = {}
 
 	airline_divs = flight.find_all('div', {'class': 'carrier'})
 	if len(airline_divs) < 1:
-		airline = ''
+		flight_obj['airline'] = ''
 	else:
 		airline_inner_divs = airline_divs[0].find_all('div')
-		airline = '' if len(airline_inner_divs) < 1 else airline_inner_divs[-1].text.strip()
+		flight_obj['airline'] = '' if len(airline_inner_divs) < 1 else airline_inner_divs[-1].text.strip()
+
+	start_time_divs = flight.find_all('div', {'class': 'depart'})
+	flight_obj['start_time'] = parse_kayak_html(start_time_divs, 1)
+
+	end_time_divs = flight.find_all('div', {'class': 'return'})
+	flight_obj['end_time'] = parse_kayak_html(end_time_divs, 1)
+
+	duration_divs = flight.find_all('div', {'class': 'duration'})
+	flight_obj['duration'] = parse_kayak_html(duration_divs, 1)
 
 	stops_divs = flight.find_all('div', {'class': 'stops'})
-	stops = get_kayak_stops(stops_divs, 1)
-	
-	price = parse_html_for_info(flight, 'span', {'class': 'price'})
-
-	f.write('Kayak,{0},{1},{2},{3},{4},'.format(airline, start_time, end_time, duration, stops))
+	flight_obj['stops'] = get_kayak_stops(stops_divs, 1)
 	
 	if is_return_trip():
-		start_time_2 = parse_kayak_html(start_time_divs, 2)
-		end_time_2 = parse_kayak_html(end_time_divs, 2)
-		duration_2 = parse_kayak_html(duration_divs, 2)
-
 		if len(airline_divs) < 2:
-			airline_2 = ''
+			flight_obj['airline_2'] = ''
 		else:
 			airline_inner_divs_2 = airline_divs[1].find_all('div')
-			airline_2 = '' if len(airline_inner_divs_2) < 1 else airline_inner_divs_2[-1].text.strip()
-
-		stops_2 = get_kayak_stops(stops_divs, 2)
-
-		f.write('{0},{1},{2},{3},{4},'.format(
-			airline_2, start_time_2, end_time_2, duration_2, stops_2
-		))
+			flight_obj['airline_2'] = '' if len(airline_inner_divs_2) < 1 else airline_inner_divs_2[-1].text.strip()
 		
-	f.write('{0}\n'.format(price))
+		flight_obj['start_time_2'] = parse_kayak_html(start_time_divs, 2)
+		flight_obj['end_time_2'] = parse_kayak_html(end_time_divs, 2)
+
+		flight_obj['duration_2'] = parse_kayak_html(duration_divs, 2)
+		flight_obj['stops_2'] = get_kayak_stops(stops_divs, 2)
+
+	flight_obj['price'] = parse_html_for_info(flight, 'span', {'class': 'price'})
+	csv_flights.append(flight_obj)
 
 
 # Web scraping from FlightNetwork
