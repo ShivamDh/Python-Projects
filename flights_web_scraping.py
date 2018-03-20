@@ -861,7 +861,7 @@ kayak_soup = soup(kayak_json['content'], 'html.parser')
 flights = kayak_soup.find_all('div', {'class': 'Flights-Results-FlightResultItem'}) 
 
 for flight in flights:
-	flight_obj = {}
+	flight_obj = {'website': 'Kayak'}
 
 	airline_divs = flight.find_all('div', {'class': 'carrier'})
 	if len(airline_divs) < 1:
@@ -904,47 +904,40 @@ for flight in flights:
 flights = get_flightnetwork_itineraries()
 
 for flight in flights:
-	start_time = flight['legs'][0]['departureTime']
-	end_time = flight['legs'][0]['arrivalTime']
-	
-	duration_time = flight['legs'][0]['duration']
-	duration = '{0}h {1}m'.format(int(duration_time/60), duration_time%60)
+	flight_obj = {'website': 'FlightNetwork'}
 	
 	segments = flight['legs'][0]['segments']
 	one_airline = all(segment['marketing']['code'] == segments[0]['marketing']['code'] for segment in segments)
 	
-	airline = segments[0]['marketing']['name'] if one_airline else 'Multiple Airlines' 
+	flight_obj['airline'] = segments[0]['marketing']['name'] if one_airline else 'Multiple Airlines' 
+
+	flight_obj['start_time'] = flight['legs'][0]['departureTime']
+	flight_obj['end_time'] = flight['legs'][0]['arrivalTime']
+	
+	duration_time = flight['legs'][0]['duration']
+	flight_obj['duration'] = '{0}h {1}m'.format(int(duration_time/60), duration_time%60)
 	
 	num_stops = len(segments) - 1
-	stops = num_stops_to_text(num_stops)
-	
-	price = flight['fare']['currency']['code'] + str(flight['fare']['total'])
+	flight_obj['stops'] = num_stops_to_text(num_stops)
 	
 	if is_return_trip():
-		start_time_2 = flight['legs'][1]['departureTime']
-		end_time_2 = flight['legs'][1]['arrivalTime']
-
-		duration_time_2 = flight['legs'][1]['duration']
-		duration_2 = '{0}h {1}m'.format(int(duration_time_2/60), duration_time_2%60)
-		
 		segments_2 = flight['legs'][1]['segments']
 		one_airline_2 = all(segment_2['marketing']['code'] == segments_2[0]['marketing']['code'] for segment_2 in segments_2)
 		
-		airline_2 = segments_2[0]['marketing']['name'] if one_airline_2 else 'Multiple Airlines' 
+		flight_obj['airline_2'] = segments_2[0]['marketing']['name'] if one_airline_2 else 'Multiple Airlines' 
+
+		flight_obj['start_time_2'] = flight['legs'][1]['departureTime']
+		flight_obj['end_time_2'] = flight['legs'][1]['arrivalTime']
+
+		duration_time_2 = flight['legs'][1]['duration']
+		flight_obj['duration_2'] = '{0}h {1}m'.format(int(duration_time_2/60), duration_time_2%60)
 
 		num_stops_2 = len(segments_2) - 1
-		stops_2 = num_stops_to_text(num_stops_2)
+		flight_obj['stops_2'] = num_stops_to_text(num_stops_2)
 		
-	f.write('FlightNetwork,{0},{1},{2},{3},{4},'.format(
-		airline, start_time, end_time, duration, stops
-	))
-	
-	if is_return_trip():
-		f.write('{0},{1},{2},{3},{4},'.format(
-			airline_2, start_time_2, end_time_2, duration_2, stops_2
-		))
-		
-	f.write('{0}\n'.format(price))
+	flight_obj['price'] = flight['fare']['currency']['code'] + str(flight['fare']['total'])
+
+	csv_flights.append(flight_obj)
 		
 
 # Web scraping from FlightCentre
@@ -1039,54 +1032,43 @@ currency = kiwi_response_json['currency']
 exchange_rate = get_exchange_rate(currency)
 
 for flight in flights:
+	flight_obj = {'website': 'Kiwi'}
+
 	start_time_struct = time.gmtime(flight['dTime'])
-	start_time = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
+	flight_obj['start_time'] = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
 	
 	end_time_struct = time.gmtime(flight['aTime'])
-	end_time = '{0}h {1}m'.format(end_time_struct.tm_hour, end_time_struct.tm_min)
+	flight_obj['end_time'] = '{0}h {1}m'.format(end_time_struct.tm_hour, end_time_struct.tm_min)
 	
-	duration = flight['fly_duration']
+	flight_obj['duration'] = flight['fly_duration']
 	
 	departure_flights = set([x['airline'] for x in flight['route'] if x['return'] == 0])
-	return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
+
+	flight_obj['airline'] = ( 'Multiple Airlines' if len(departure_flights) > 1 
+					else airline_code_to_name(next(iter(departure_flights))) )
 	
-	stops = num_stops_to_text(len(departure_flights))
+	flight_obj['stops'] = num_stops_to_text(len(departure_flights))
 	
 	if is_return_trip():
 		return_flights_routes = [x for x in flight['route'] if x['return'] == 1]
+
+		return_flights = set([x['airline'] for x in flight['route'] if x['return'] == 1])
+		flight_obj['airline_2'] = ( 'Multiple Airlines' if len(return_flights) > 1 
+					else airline_code_to_name(next(iter(return_flights))) )
 		
 		start_time_2_struct = time.gmtime(return_flights_routes[0]['dTime'])
-		start_time_2 = '{0}h {1}m'.format(start_time_2_struct.tm_hour, start_time_2_struct.tm_min)
+		flight_obj['start_time_2'] = '{0}h {1}m'.format(start_time_2_struct.tm_hour, start_time_2_struct.tm_min)
 		
 		end_time_2_struct = time.gmtime(return_flights_routes[-1]['aTime'])
-		end_time_2 = '{0}h {1}m'.format(end_time_2_struct.tm_hour, end_time_2_struct.tm_min)
+		flight_obj['end_time_2'] = '{0}h {1}m'.format(end_time_2_struct.tm_hour, end_time_2_struct.tm_min)
 		
-		duration_2 = flight['return_duration']
-		stops_2 = num_stops_to_text(len(return_flights))
-
-		airline = ( 'Multiple Airlines' if len(departure_flights) > 1 
-					else airline_code_to_name(next(iter(departure_flights))) )
-
-		airline_2 = ( 'Multiple Airlines' if len(return_flights) > 1 
-					else airline_code_to_name(next(iter(return_flights))) )
-				
-	else:
-		airline = ( 'Multiple Airlines' if len(departure_flights) > 1 
-					else airline_code_to_name(next(iter(departure_flights))) )
+		flight_obj['duration_2'] = flight['return_duration']
+		flight_obj['stops_2'] = num_stops_to_text(len(return_flights))
 	
 	price_number = flight['price']*exchange_rate
+	flight_obj['price'] = float("{:.2f}".format(float(price_number)))
 	
-	price = 'CAD$' + "{:.2f}".format(float(price_number))
-	
-	f.write('Kiwi,{0},{1},{2},{3},{4}'.format(airline, start_time, end_time, duration, stops))
-	
-	if is_return_trip():
-		f.write(',{0},{1},{2},{3},{4}'.format(
-			airline_2, start_time_2, end_time_2, duration_2, stops_2
-		))
-		
-	f.write(',{0}\n'.format(price))
-	
+	csv_flights.append(flight_obj)	
 
 
 
