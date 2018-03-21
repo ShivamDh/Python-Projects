@@ -199,7 +199,7 @@ def get_user_input():
 		date_2 = date_2_input
 
 	print('How would you like the data formatted')
-	sort_input = input(' p - Price, d = Duration, t = Time: ')
+	sort_input = input(' p - Price, d = Duration, t = Start Time: ')
 	while not validate_sort_type(sort_input):
 		sort_input = input('Invalid sort type entered, enter p/d/t: ')
 
@@ -307,7 +307,6 @@ def parse_expedia_flight(flight):
 	
 	flight_object['duration'] = str(flight['duration']['hours']) + 'h ' + str(flight['duration']['minutes']) + 'm'
 	flight_object['stops'] = num_stops_to_text(flight['formattedStops'])
-	flight_object['price'] = flight['price']['totalPriceAsDecimalString']
 
 	return flight_object
 	
@@ -809,13 +808,16 @@ if len(continued_results_divs) > 0:
 				flight_obj_2['stops_2'] = num_stops_to_text(flight_2[1]['formattedStops'])
 				
 				price_2 = flight_2[1]['price']['exactPrice'] + flight[1]['price']['exactPrice'] - cheapest_first_leg_flight
-				flight_obj_2['price_2'] = float("{:.2f}".format(float(price_2)))
+				flight_obj_2['price'] = "{:.2f}".format(float(price_2))
 
 				csv_flights.append(flight_obj_2)
 		
 	else:
 		for key in flights:
 			flight_obj = parse_expedia_flight(flights[key])
+
+			flight_object['price'] = flight['price']['totalPriceAsDecimalString']
+
 			csv_flights.append(flight_obj)
 	
 else:
@@ -895,7 +897,7 @@ for flight in flights:
 		flight_obj['duration_2'] = parse_kayak_html(duration_divs, 2)
 		flight_obj['stops_2'] = get_kayak_stops(stops_divs, 2)
 
-	flight_obj['price'] = parse_html_for_info(flight, 'span', {'class': 'price'})
+	flight_obj['price'] = parse_html_for_info(flight, 'span', {'class': 'price'})[1:]
 	csv_flights.append(flight_obj)
 
 
@@ -935,7 +937,7 @@ for flight in flights:
 		num_stops_2 = len(segments_2) - 1
 		flight_obj['stops_2'] = num_stops_to_text(num_stops_2)
 		
-	flight_obj['price'] = flight['fare']['currency']['code'] + str(flight['fare']['total'])
+	flight_obj['price'] = str(flight['fare']['total'])
 
 	csv_flights.append(flight_obj)
 		
@@ -963,21 +965,17 @@ airline_keys = {}
 parse_flightcentre_airlines(flightcenter_soup, airline_keys)
 
 for flight in flights:
-	bold_texts = flight.find_all('strong')
-	
-	start_time = bold_texts[8].text.strip()
-	end_time = bold_texts[9].text.strip()
-	
-	duration = bold_texts[3].text.strip()
-	stops = bold_texts[2].text.strip()
-	price = bold_texts[4].text.strip()
-	
 	airline_key = flight.find('img')['alt']
 	airline = airline_keys[airline_key]
+	
+	bold_texts = flight.find_all('strong')
 
-	f.write('FlightCenter,{0},{1},{2},{3},{4},'.format(
-		airline, start_time, end_time, duration, stops
-	))
+	flight_obj['start_time'] = bold_texts[8].text.strip()
+	flight_obj['end_time'] = bold_texts[9].text.strip()
+	
+	flight_obj['duration'] = bold_texts[3].text.strip()
+	flight_obj['stops'] = bold_texts[2].text.strip()
+	
 	
 	if is_return_trip():
 		form = flight.find('form')
@@ -1001,24 +999,22 @@ for flight in flights:
 		parse_flightcentre_airlines(flightcenter_soup_2, airline_keys)
 
 		for flight_2 in flights_2:
+			airline_key_2 = flight_2.find('img')['alt']
+			flight_obj['airline_2'] = airline_keys[airline_key_2]
+
 			bold_texts_2 = flight_2.find_all('strong')
 			
-			start_time_2 = bold_texts_2[8].text.strip()
-			end_time_2 = bold_texts_2[9].text.strip()
+			flight_obj['start_time_2'] = bold_texts_2[8].text.strip()
+			flight_obj['end_time_2'] = bold_texts_2[9].text.strip()
 			
-			duration_2 = bold_texts_2[3].text.strip()
-			stops_2 = bold_texts_2[2].text.strip()
-			price_2 = bold_texts_2[4].text.strip()
+			flight_obj['duration_2'] = bold_texts_2[3].text.strip()
+			flight_obj['stops_2'] = bold_texts_2[2].text.strip()
 			
-			airline_key_2 = flight_2.find('img')['alt']
-			airline_2 = airline_keys[airline_key_2]
-			
-			f.write('{0},{1},{2},{3},{4},'.format(
-				airline_2, start_time_2, end_time_2, duration_2, stops_2
-			))
+	flight_obj['price'] = bold_texts[4].text.strip() if not is_return_trip() else bold_texts_2[4].text.strip()
 
-	f.write('{0}\n'.format(price))
-		
+	csv_flights.append(flight_obj)
+
+
 # Web scraping from Kiwi
 
 kiwi_url = build_kiwi_url()
@@ -1066,13 +1062,9 @@ for flight in flights:
 		flight_obj['stops_2'] = num_stops_to_text(len(return_flights))
 	
 	price_number = flight['price']*exchange_rate
-	flight_obj['price'] = float("{:.2f}".format(float(price_number)))
+	flight_obj['price'] = "{:.2f}".format(float(price_number))
 	
-	csv_flights.append(flight_obj)	
-
-
-
-
+	csv_flights.append(flight_obj)
 
 
 # Open CSV file to be used when writing all results
@@ -1092,12 +1084,14 @@ csv_headers += 'Price\n\n'
 
 f.write(csv_headers)
 
+
+# Sample flight keys from first flight, all flight objects should have same keys
 flight_keys = list(csv_flights[0].keys())
 
 for flight in csv_flights:
 	flight_string = ''
 	for flight_key in flight_keys:
-		flight_string += flight[flight_key] + ','
+		flight_string += str(flight[flight_key]) + ','
 	f.write(flight_string[:-1] + '\n')
 
 f.close()
