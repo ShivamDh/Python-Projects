@@ -816,7 +816,7 @@ if len(continued_results_divs) > 0:
 		for key in flights:
 			flight_obj = parse_expedia_flight(flights[key])
 
-			flight_object['price'] = flight['price']['totalPriceAsDecimalString']
+			flight_obj['price'] = flights[key]['price']['totalPriceAsDecimalString']
 
 			csv_flights.append(flight_obj)
 	
@@ -873,10 +873,10 @@ for flight in flights:
 		flight_obj['airline'] = '' if len(airline_inner_divs) < 1 else airline_inner_divs[-1].text.strip()
 
 	start_time_divs = flight.find_all('div', {'class': 'depart'})
-	flight_obj['start_time'] = parse_kayak_html(start_time_divs, 1)
+	flight_obj['start_time'] = parse_kayak_html(start_time_divs, 1).replace(' ', '')
 
 	end_time_divs = flight.find_all('div', {'class': 'return'})
-	flight_obj['end_time'] = parse_kayak_html(end_time_divs, 1)
+	flight_obj['end_time'] = parse_kayak_html(end_time_divs, 1).replace(' ', '')
 
 	duration_divs = flight.find_all('div', {'class': 'duration'})
 	flight_obj['duration'] = parse_kayak_html(duration_divs, 1)
@@ -891,8 +891,8 @@ for flight in flights:
 			airline_inner_divs_2 = airline_divs[1].find_all('div')
 			flight_obj['airline_2'] = '' if len(airline_inner_divs_2) < 1 else airline_inner_divs_2[-1].text.strip()
 		
-		flight_obj['start_time_2'] = parse_kayak_html(start_time_divs, 2)
-		flight_obj['end_time_2'] = parse_kayak_html(end_time_divs, 2)
+		flight_obj['start_time_2'] = parse_kayak_html(start_time_divs, 2).replace(' ', '')
+		flight_obj['end_time_2'] = parse_kayak_html(end_time_divs, 2).replace(' ', '')
 
 		flight_obj['duration_2'] = parse_kayak_html(duration_divs, 2)
 		flight_obj['stops_2'] = get_kayak_stops(stops_divs, 2)
@@ -960,18 +960,20 @@ flightcenter_response = safe_get(flightcenter_url)
 flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
-airline_keys = {}
+airline_keys = {'Multiple Airlines': 'Multiple Airlines'}
 
 parse_flightcentre_airlines(flightcenter_soup, airline_keys)
 
 for flight in flights:
+	flight_obj = {'website': 'FlightCentre'}
+
 	airline_key = flight.find('img')['alt']
-	airline = airline_keys[airline_key]
+	flight_obj['airline'] = airline_keys[airline_key]
 	
 	bold_texts = flight.find_all('strong')
 
-	flight_obj['start_time'] = bold_texts[8].text.strip()
-	flight_obj['end_time'] = bold_texts[9].text.strip()
+	flight_obj['start_time'] = bold_texts[8].text.strip().replace(' ', '').lower()
+	flight_obj['end_time'] = bold_texts[9].text.strip().replace(' ', '').lower()
 	
 	flight_obj['duration'] = bold_texts[3].text.strip()
 	flight_obj['stops'] = bold_texts[2].text.strip()
@@ -1004,13 +1006,14 @@ for flight in flights:
 
 			bold_texts_2 = flight_2.find_all('strong')
 			
-			flight_obj['start_time_2'] = bold_texts_2[8].text.strip()
-			flight_obj['end_time_2'] = bold_texts_2[9].text.strip()
+			flight_obj['start_time_2'] = bold_texts_2[8].text.strip().replace(' ', '').lower()
+			flight_obj['end_time_2'] = bold_texts_2[9].text.strip().replace(' ', '').lower()
 			
 			flight_obj['duration_2'] = bold_texts_2[3].text.strip()
 			flight_obj['stops_2'] = bold_texts_2[2].text.strip()
 			
-	flight_obj['price'] = bold_texts[4].text.strip() if not is_return_trip() else bold_texts_2[4].text.strip()
+	flight_obj['price'] = ( bold_texts[4].text.replace('$', '').strip() if not is_return_trip()
+							else bold_texts_2[4].text.replace('$', '').strip() )
 
 	csv_flights.append(flight_obj)
 
@@ -1031,10 +1034,10 @@ for flight in flights:
 	flight_obj = {'website': 'Kiwi'}
 
 	start_time_struct = time.gmtime(flight['dTime'])
-	flight_obj['start_time'] = '{0}h {1}m'.format(start_time_struct.tm_hour, start_time_struct.tm_min)
-	
+	flight_obj['start_time'] = time.strftime("%I:%M%p", start_time_struct).lower()
+
 	end_time_struct = time.gmtime(flight['aTime'])
-	flight_obj['end_time'] = '{0}h {1}m'.format(end_time_struct.tm_hour, end_time_struct.tm_min)
+	flight_obj['end_time'] = time.strftime("%I:%M%p", end_time_struct).lower()
 	
 	flight_obj['duration'] = flight['fly_duration']
 	
@@ -1053,10 +1056,10 @@ for flight in flights:
 					else airline_code_to_name(next(iter(return_flights))) )
 		
 		start_time_2_struct = time.gmtime(return_flights_routes[0]['dTime'])
-		flight_obj['start_time_2'] = '{0}h {1}m'.format(start_time_2_struct.tm_hour, start_time_2_struct.tm_min)
+		flight_obj['start_time_2'] = time.strftime("%I:%M%p", start_time_2_struct).lower()
 		
 		end_time_2_struct = time.gmtime(return_flights_routes[-1]['aTime'])
-		flight_obj['end_time_2'] = '{0}h {1}m'.format(end_time_2_struct.tm_hour, end_time_2_struct.tm_min)
+		flight_obj['end_time_2'] = time.strftime("%I:%M%p", end_time_2_struct.tm_min).lower()
 		
 		flight_obj['duration_2'] = flight['return_duration']
 		flight_obj['stops_2'] = num_stops_to_text(len(return_flights))
@@ -1080,9 +1083,19 @@ if is_return_trip():
 		end.upper(), start.upper()
 	)
 
-csv_headers += 'Price\n\n'
+csv_headers += 'Price(CAD)\n\n'
 
 f.write(csv_headers)
+
+if sort_type == 'p':
+	csv_flights.sort(key = lambda x: float(x['price']))
+elif sort_type == 't':
+	try:
+		csv_flights.sort(key = lambda x : time.strptime(x['start_time'], "%I:%M%p")) 
+	except:
+		print("Unable to sort according to start time due to string format")
+elif sort_type == 'd':
+	csv_flights.sort(key = lambda x: timedelta(hours = int(x['duration'][0:x['duration'].find('h')]), minutes = int(x['duration'][-3:-1])))
 
 
 # Sample flight keys from first flight, all flight objects should have same keys
