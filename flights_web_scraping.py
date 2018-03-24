@@ -36,9 +36,8 @@ def is_return_trip():
 def validate_airport(airport_code):
 	""" Use OpenFlights website to authenticate airport codes
 
-	Note:
-		Only major/well-known airport codes will be authenticated
-		Python script is to be used for planning routes between relatively known airports
+	Only major/well-known airport codes can be authenticated
+	Python script is to be used for planning routes between relatively known airports
 	
 	Args:
 		airport_code (str): the 3 digit IATA code to be validated
@@ -55,22 +54,22 @@ def validate_airport(airport_code):
 	url = 'https://openflights.org/php/apsearch.php'
 	
 	params = {
-		'name' : '', 
-		'iata': airport_code.upper(),
-		'icao': '',
-		'city': '',
-		'country': 'ALL',
-		'code': '',
-		'x': '',
-		'y': '',
-		'elevation': '',
-		'timezone': '',
-		'dst': 'U',
-		'db': 'airports',
-		'iatafilter': 'true',
 		'apid': '',
 		'action': 'SEARCH',
-		'offset': '0'
+		'city': '',
+		'code': '',
+		'country': 'ALL',
+		'db': 'airports',
+		'dst': 'U',
+		'elevation': '',
+		'iata': airport_code.upper(),
+		'iatafilter': 'true',
+		'icao': '',
+		'name' : '', 
+		'offset': '0',
+		'timezone': '',
+		'x': '',
+		'y': ''
 	}
 	
 	response = safe_post(url, params)
@@ -110,6 +109,7 @@ def validate_date(input_date):
 	
 	days_difference = test_date - today
 		
+	# Do not allow date to be before today or beyond 6 months from today
 	if test_date < today or days_difference.days > 185:
 		return False
 		
@@ -119,7 +119,7 @@ def validate_date(input_date):
 def validate_end_date(start_date, end_date):
 	""" Validates End Date of Journey Chosen
 	
-	Completes a comparison check against start_date
+	Complete a comparison check against start_date
 	End date is also not to be chosen greater than 6 months in advance
 
 	Args:
@@ -154,8 +154,8 @@ def validate_sort_type(input_type):
 def get_user_input():
 	""" Get user input from command line
 	
-	Also validates each user input using appropriate helper functions
-	Re-asks user for data if input validation fails
+	Validate each user input using appropriate helper functions
+	Re-ask user for data if input validation fails
 	
 	"""
 
@@ -297,8 +297,8 @@ def parse_expedia_flight(flight):
 	"""
 
 	flight_object = {'website': 'Expedia'}
-
 	flight_object['airline'] = flight['carrierSummary']['airlineName']
+	
 	if flight_object['airline'] == '':
 		flight_object['airline'] = 'Multiple Airlines'
 
@@ -432,18 +432,18 @@ def airline_code_to_name(airline_code):
 	"""
 
 	params = {
-		'name': '',
-		'alias': '',
-		'iata': airline_code,
-		'icao': '',
-		'country': 'ALL',
-		'callsign': '',
-		'mode': 'F',
+		'action': 'SEARCH',
 		'active': '',
-		'offset': '0',
-		'iatafilter': 'true',
+		'alias': '',
 		'alid': '',
-		'action': 'SEARCH'
+		'callsign': '',
+		'country': 'ALL',
+		'iata': airline_code,
+		'iatafilter': 'true',
+		'icao': '',
+		'mode': 'F',
+		'name': '',
+		'offset': '0'
 	}
 
 	url = 'https://openflights.org/php/alsearch.php'	
@@ -469,6 +469,7 @@ def get_kayak_response():
 
 	"""
 
+	# Get cookies from home page to utilize in search request later
 	home_url = 'https://www.kayak.com'
 	home_response = safe_get(home_url)
 	kayak_cookies = home_response.cookies
@@ -510,15 +511,15 @@ def get_kayak_response():
 		'depart_date_canon':kayak_date_1,
 		'return_date_canon':kayak_date_2,
 		'url':kayak_url_to_append,
+		'append':'false',
+		'applyFilters':'true',
 		'searchId':'',
 		'poll':'true',
 		'pollNumber':'0',
-		'applyFilters':'true',
-		'filterState':'',
-		'useViewStateFilterState':'false',
-		'pageNumber':'1',
-		'append':'false',
 		'pollingId':'593601',
+		'filterState':'',
+		'pageNumber':'1',
+		'useViewStateFilterState':'false',
 		'requestReason':'POLL',
 		'isSecondPhase':'false',
 		'textAndPageLocations':'bottom,right',
@@ -667,7 +668,7 @@ def get_flightnetwork_itineraries():
 		list: The top 100 itineraries regarding one-way or return trips
 
 	"""
-
+	
 	home_url = 'https://www.flightnetwork.com/'
 	home_response = safe_get(home_url)
 	home_cookies = home_response.cookies
@@ -978,7 +979,6 @@ for flight in flights:
 	flight_obj['duration'] = bold_texts[3].text.strip()
 	flight_obj['stops'] = bold_texts[2].text.strip()
 	
-	
 	if is_return_trip():
 		form = flight.find('form')
 		inputs = form.find_all('input')
@@ -1026,6 +1026,7 @@ kiwi_response = safe_get(kiwi_url)
 kiwi_response_json = loads(kiwi_response.text)
 
 flights = kiwi_response_json['data']
+
 currency = kiwi_response_json['currency']
 
 exchange_rate = get_exchange_rate(currency)
