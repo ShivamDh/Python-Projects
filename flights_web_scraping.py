@@ -299,6 +299,7 @@ def parse_expedia_flight(flight):
 	flight_object = {'website': 'Expedia'}
 	flight_object['airline'] = flight['carrierSummary']['airlineName']
 	
+	# Empty airline name indicates multiple airlines for route
 	if flight_object['airline'] == '':
 		flight_object['airline'] = 'Multiple Airlines'
 
@@ -499,6 +500,7 @@ def get_kayak_response():
 
 	oneway = str(not is_return_trip()).lower()
 
+	# Long list of paramaters used in the request
 	params = {
 		'depart_date':kayak_date_1,
 		'return_date':kayak_date_2,
@@ -626,6 +628,7 @@ def get_flightnetwork_referer_url():
 
 	trip_type = 'roundTrip' if is_return_trip() else 'oneway'
 		
+	# One long string containing information tobe sent in URL
 	referer_search = '{\
 		"tripType":"' + trip_type + '",\
 		"cabinClass":"economy",\
@@ -669,6 +672,7 @@ def get_flightnetwork_itineraries():
 
 	"""
 	
+	# Get cookies from homepage to use later in search request
 	home_url = 'https://www.flightnetwork.com/'
 	home_response = safe_get(home_url)
 	home_cookies = home_response.cookies
@@ -788,6 +792,8 @@ if len(continued_results_divs) > 0:
 		flights = flights[:10]
 		flights_2 = flights_2[:10]
 		
+		# Prices for 2nd leg will be according to first flight picked from leg 1
+		# For routes using a different flight for leg 1, the difference in costs will added
 		cheapest_first_leg_flight = flights[0][1]['price']['exactPrice']
 		
 		for flight in flights:
@@ -979,13 +985,17 @@ for flight in flights:
 	flight_obj['duration'] = bold_texts[3].text.strip()
 	flight_obj['stops'] = bold_texts[2].text.strip()
 	
+	# Return journeys will need another API request to get details
 	if is_return_trip():
+		
+		# find a hidden form within the webpage
 		form = flight.find('form')
 		inputs = form.find_all('input')
 		flightcenter_url_2 = 'https://www.flightcentre.ca/flights/booking/inbound'
 		
 		params = {}
 		
+		# Grab form inputs from hidden form for request to be sent later
 		for input in inputs:
 			params[input['name']] = input['value']
 		
@@ -1027,8 +1037,8 @@ kiwi_response_json = loads(kiwi_response.text)
 
 flights = kiwi_response_json['data']
 
+# Kiwi does not always use CAD, obtain currency exchange information
 currency = kiwi_response_json['currency']
-
 exchange_rate = get_exchange_rate(currency)
 
 for flight in flights:
@@ -1088,14 +1098,14 @@ csv_headers += 'Price(CAD)\n\n'
 
 f.write(csv_headers)
 
-if sort_type == 'p':
+if sort_type == SORT_BY_PRICE:
 	csv_flights.sort(key = lambda x: float(x['price']))
-elif sort_type == 't':
+elif sort_type == SORT_BY_TIME:
 	try:
 		csv_flights.sort(key = lambda x : time.strptime(x['start_time'], "%I:%M%p")) 
 	except:
 		print("Unable to sort according to start time due to string format")
-elif sort_type == 'd':
+elif sort_type == SORT_BY_DURATION:
 	csv_flights.sort(key = lambda x: timedelta(hours = int(x['duration'][0:x['duration'].find('h')]), minutes = int(x['duration'][-3:-1])))
 
 
