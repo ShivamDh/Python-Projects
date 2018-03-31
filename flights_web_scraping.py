@@ -311,66 +311,7 @@ def parse_expedia_flight(flight):
 
 	return flight_object
 	
-
-def build_kiwi_url():
-	""" Build a url used to GET Kiwi results
-
-	Returns:
-		str: url-encoded string used to get a response from Kiwi
-
-	"""
-
-	url = 'https://api.skypicker.com/flights?adults=1&asc=1'
-
-	url += '&flyFrom={0}&to={1}&sort=price&dateFrom={2}%2F{3}%2F{4}&dateTo={2}%2F{3}%2F{4}'.format(
-		start.upper(), end.upper(), date_1[0:2], date_1[3:5], date_1[6:10]
-	)
-
-	if is_return_trip():
-		url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
-			date_2[0:2], date_2[3:5], date_2[6:10]
-		)
-	else:
-		url += '&typeFlight=oneway'
 	
-	return url
-
-
-def get_exchange_rate(initial_currency):
-	""" Get currency exchange rate from initial currency to CAD
-
-	Use an online API to get hourly updated currency exchange rates
-
-	Args:
-		initial_currency (str): currency wanting to exhcange with CAD
-
-	Returns:
-		float: an exchange rate representing how much 1 unit of initial currency represents CAD
-			   ex. if 1 USD = 1.321 CAD  then function returns 1.321
-
-	"""
-
-	# Account for condition that flight results were returned in CAD
-	if initial_currency.upper() == 'CAD':
-		return 1
-
-	conversion = '{}_CAD'.format(initial_currency.upper())
-
-	url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(
-		conversion
-	)
-
-	try:
-		response = safe_get(url)
-		response_json = loads(response.text)
-	except Exception:
-		return 1
-
-	rate = response_json[conversion]['val']
-
-	return rate
-
-
 def num_stops_to_text(stops):
 	""" Convert numeric/string stop number to descriptive and consistent text 
 
@@ -744,6 +685,64 @@ def parse_flightcentre_airlines(resp_soup, key_dict):
 		key_dict[label.input['value']] = label.text.strip()
 
 
+def build_kiwi_url():
+	""" Build a url used to GET Kiwi results
+
+	Returns:
+		str: url-encoded string used to get a response from Kiwi
+
+	"""
+
+	url = 'https://api.skypicker.com/flights?adults=1&asc=1'
+
+	url += '&flyFrom={0}&to={1}&sort=price&dateFrom={2}%2F{3}%2F{4}&dateTo={2}%2F{3}%2F{4}'.format(
+		start.upper(), end.upper(), date_1[0:2], date_1[3:5], date_1[6:10]
+	)
+
+	if is_return_trip():
+		url += '&returnFrom={0}%2F{1}%2F{2}&returnTo={0}%2F{1}%2F{2}&typeFlight=return'.format(
+			date_2[0:2], date_2[3:5], date_2[6:10]
+		)
+	else:
+		url += '&typeFlight=oneway'
+	
+	return url
+
+
+def get_exchange_rate(initial_currency):
+	""" Get currency exchange rate from initial currency to CAD
+
+	Use an online API to get hourly updated currency exchange rates
+
+	Args:
+		initial_currency (str): currency wanting to exhcange with CAD
+
+	Returns:
+		float: an exchange rate representing how much 1 unit of initial currency represents CAD
+			   ex. if 1 USD = 1.321 CAD  then function returns 1.321
+
+	"""
+
+	# Account for condition that flight results were returned in CAD
+	if initial_currency.upper() == 'CAD':
+		return 1
+
+	conversion = '{}_CAD'.format(initial_currency.upper())
+
+	url = 'http://free.currencyconverterapi.com/api/v5/convert?q={0}&compact=y'.format(
+		conversion
+	)
+
+	try:
+		response = safe_get(url)
+		response_json = loads(response.text)
+	except Exception:
+		return 1
+
+	rate = response_json[conversion]['val']
+
+	return rate
+		
 
 ###############################################################################
 # MAIN
@@ -781,6 +780,7 @@ if len(continued_results_divs) > 0:
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
 		
 		expedia_results_2_response = safe_get(expedia_results_2_url)
+		
 		expedia_2_json = loads(expedia_results_2_response.text)
 		
 		flights_2 = expedia_2_json['content']['legs']
@@ -967,6 +967,7 @@ flightcenter_response = safe_get(flightcenter_url)
 flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
+
 airline_keys = {'Multiple Airlines': 'Multiple Airlines'}
 
 parse_flightcentre_airlines(flightcenter_soup, airline_keys)
@@ -991,6 +992,8 @@ for flight in flights:
 		# find a hidden form within the webpage
 		form = flight.find('form')
 		inputs = form.find_all('input')
+		
+		# Form and inputs collected above to be sent to return left API request
 		flightcenter_url_2 = 'https://www.flightcentre.ca/flights/booking/inbound'
 		
 		params = {}
@@ -1107,7 +1110,6 @@ elif sort_type == SORT_BY_TIME:
 		print("Unable to sort according to start time due to string format")
 elif sort_type == SORT_BY_DURATION:
 	csv_flights.sort(key = lambda x: timedelta(hours = int(x['duration'][0:x['duration'].find('h')]), minutes = int(x['duration'][-3:-1])))
-
 
 # Sample flight keys from first flight, all flight objects should have same keys
 flight_keys = list(csv_flights[0].keys())
