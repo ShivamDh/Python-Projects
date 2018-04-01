@@ -34,10 +34,7 @@ def is_return_trip():
 
 
 def validate_airport(airport_code):
-	""" Use OpenFlights website to authenticate airport codes
-
-	Only major/well-known airport codes can be authenticated
-	Python script is to be used for planning routes between relatively known airports
+	""" Use OpenFlights website to authenticate major airport codes
 	
 	Args:
 		airport_code (str): the 3 digit IATA code to be validated
@@ -117,10 +114,7 @@ def validate_date(input_date):
 
 	
 def validate_end_date(start_date, end_date):
-	""" Validates End Date of Journey Chosen
-	
-	Complete a comparison check against start_date
-	End date is also not to be chosen greater than 6 months in advance
+	""" Validates end date of journey, also completes a comparison check against start_date
 
 	Args:
 		start_date (str): a start date for the journey, presumably already validated
@@ -470,9 +464,9 @@ def get_kayak_response():
 		'existingAds':'false',
 		'activeLeg':'-1',
 		'view':'list',
-		'renderPlusMinusThreeFlex':'false',
 		'renderAirlineStopsMatrix':'false',
 		'renderFlexHeader':'true',
+		'renderPlusMinusThreeFlex':'false',
 		'tab':'flights',
 		'pageOrigin':'F..FD..M0',
 		'src':'',
@@ -975,9 +969,12 @@ parse_flightcentre_airlines(flightcenter_soup, airline_keys)
 for flight in flights:
 	flight_obj = {'website': 'FlightCentre'}
 
-	airline_key = flight.find('img')['alt']
-	flight_obj['airline'] = airline_keys[airline_key]
-	
+	try:
+		airline_key = flight.find('img')['alt']
+		flight_obj['airline'] = airline_keys[airline_key]
+	except KeyError:
+		flight_obj['airline'] = airline_code_to_name(airline_key)
+
 	bold_texts = flight.find_all('strong')
 
 	flight_obj['start_time'] = bold_texts[8].text.strip().replace(' ', '').lower()
@@ -1014,8 +1011,11 @@ for flight in flights:
 		parse_flightcentre_airlines(flightcenter_soup_2, airline_keys)
 
 		for flight_2 in flights_2:
-			airline_key_2 = flight_2.find('img')['alt']
-			flight_obj['airline_2'] = airline_keys[airline_key_2]
+			try:
+				airline_key_2 = flight_2.find('img')['alt']
+				flight_obj['airline_2'] = airline_keys[airline_key_2]
+			except KeyError:
+				flight_obj['airline_2'] = airline_code_to_name(airline_key_2)
 
 			bold_texts_2 = flight_2.find_all('strong')
 			
@@ -1073,7 +1073,7 @@ for flight in flights:
 		flight_obj['start_time_2'] = time.strftime("%I:%M%p", start_time_2_struct).lower()
 		
 		end_time_2_struct = time.gmtime(return_flights_routes[-1]['aTime'])
-		flight_obj['end_time_2'] = time.strftime("%I:%M%p", end_time_2_struct.tm_min).lower()
+		flight_obj['end_time_2'] = time.strftime("%I:%M%p", end_time_2_struct).lower()
 		
 		flight_obj['duration_2'] = flight['return_duration']
 		flight_obj['stops_2'] = num_stops_to_text(len(return_flights))
