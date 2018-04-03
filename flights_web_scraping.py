@@ -577,6 +577,18 @@ def get_flightnetwork_referer_url():
 
 
 def get_flightnetwork_response(url, url_header, home_cookies, referer_search):
+	""" Obtains FlightNetwork flight information for given route and date
+
+	Args:
+		url (str): the specific URL for request
+		url_header (dict): request header for the particular API call
+		home_cookies (dict): specific domain cookies obtained from home page
+		referer_search (str): URL required as a referer in the request
+
+	Returns
+		json: A json parsed request reponse from Flightnetwork's website
+
+	"""
 
 	search = referer_search[0:-1] + ',"references":{"source":"FN","client":"flightnetwork"},"flexFares":true}' 
 
@@ -766,11 +778,7 @@ if len(continued_results_divs) > 0:
 	
 	# send another Expedia request to gather second leg journeys
 	if is_return_trip():
-		expedia_results_2_url = expedia_results_url.replace(
-			'is=1',
-			'is=0&fl0=' + flight_keys[0]
-		)
-		
+		expedia_results_2_url = expedia_results_url.replace('is=1', 'is=0&fl0=' + flight_keys[0])
 		expedia_results_2_url = expedia_results_2_url.replace('ul=0', 'ul=1')
 		
 		expedia_results_2_response = safe_get(expedia_results_2_url)
@@ -949,7 +957,10 @@ flightcenter_url = 'https://www.flightcentre.ca/flights/booking/outbound?time=&d
 	start.upper(), end.upper()
 )
 
+# Parse date into format: YYYYMMDD
 departure_date = date_1[6:10] + date_1[3:5] + date_1[0:2]
+
+# Return date needs to be sent with the URL request
 return_date = departure_date if not is_return_trip() else  date_2[6:10] + date_2[3:5] + date_2[0:2]
 
 flightcenter_url += '&departureDate={0}&returnDate={1}&seatClass=Y&adults=1&searchtype=RE'.format(
@@ -960,10 +971,13 @@ flightcenter_response = safe_get(flightcenter_url)
 
 flightcenter_soup = soup(flightcenter_response.text, 'html.parser')
 
+# Get all flight prices
 flights = flightcenter_soup.find_all('div', {'class': 'outboundOffer'})
 
+# Create a dict to store flight names according to IATA code
 airline_keys = {'Multiple Airlines': 'Multiple Airlines'}
 
+# Obtain the rest of airline codes from BeautifulSoup response
 parse_flightcentre_airlines(flightcenter_soup, airline_keys)
 
 for flight in flights:
@@ -1092,6 +1106,7 @@ csv_headers = 'Website,Airline,Start({0}),End({1}),Duration,Stops,'.format(
 	start.upper(), end.upper()
 )
 
+# Add more columns if journey has a return trip as well
 if is_return_trip():
 	csv_headers += 'Airline,Start ({0}),End({1}),Duration,Stops,'.format(
 		end.upper(), start.upper()
@@ -1101,6 +1116,7 @@ csv_headers += 'Price(CAD)\n\n'
 
 f.write(csv_headers)
 
+# Sorting all flight responses according to user input
 if sort_type == SORT_BY_PRICE:
 	csv_flights.sort(key = lambda x: float(x['price']))
 elif sort_type == SORT_BY_TIME:
