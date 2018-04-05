@@ -33,6 +33,10 @@ def is_return_trip():
 	return flight_type == RETURN_TRIP
 
 
+def validate_sort_type(input_type):
+	return input_type.lower() in {SORT_BY_PRICE, SORT_BY_DURATION, SORT_BY_TIME}
+
+
 def validate_airport(airport_code):
 	""" Use OpenFlights website to authenticate major airport codes
 	
@@ -91,9 +95,11 @@ def validate_date(input_date):
 	
 	"""
 
+	# Date to be in format: DD/MM/YYYY -> len() = 10
 	if len(input_date) != 10:
 		return False
 	
+	# Parse string for specific date/month/year
 	try:
 		test_date = int(input_date[0:2])
 		test_month = int(input_date[3:5])
@@ -106,7 +112,7 @@ def validate_date(input_date):
 	
 	days_difference = test_date - today
 		
-	# Do not allow date to be before today or beyond 6 months from today
+	# Date can't be before today or beyond 6 months from today
 	if test_date < today or days_difference.days > 185:
 		return False
 		
@@ -114,7 +120,7 @@ def validate_date(input_date):
 
 	
 def validate_end_date(start_date, end_date):
-	""" Validates end date of journey, also completes a comparison check against start_date
+	""" Validate end date of journey, also completes a comparison check against start_date
 
 	Args:
 		start_date (str): a start date for the journey, presumably already validated
@@ -140,10 +146,6 @@ def validate_end_date(start_date, end_date):
 		
 	return True
 	
-	
-def validate_sort_type(input_type):
-	return input_type.lower() in {SORT_BY_PRICE, SORT_BY_DURATION, SORT_BY_TIME}
-
 
 def get_user_input():
 	""" Get user input from command line
@@ -433,6 +435,7 @@ def get_kayak_response():
 		'X-Requested-With': 'XMLHttpRequest'
 	}
 
+	# Get str from boolean
 	oneway = str(not is_return_trip()).lower()
 
 	# Long list of paramaters used in the request
@@ -532,7 +535,6 @@ def get_kayak_stops(stops_divs, count_needed):
 
 	"""
 
-
 	if len(stops_divs) < count_needed:
 		return ''
 	else:
@@ -624,6 +626,7 @@ def get_flightnetwork_itineraries():
 	home_response = safe_get(home_url)
 	home_cookies = home_response.cookies
 
+	# Header dict to be used in multiple requests on Flightnetwork
 	header = {
 		'Accept': '*/*',
 		'Accept-Language': 'en-US,en;q=0.9',
