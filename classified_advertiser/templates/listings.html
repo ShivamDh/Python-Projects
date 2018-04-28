@@ -1,5 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	ALL LISTINGS
+	<h1> Listings </h1>
+
+	{% for listing in listings %}
+		<p> {{listing.title}} </p>
+	{% endfor %}
+
 {% endblock %}
