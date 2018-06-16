@@ -3,8 +3,36 @@
 {% block body %}
 	<h1> Listings </h1>
 
-	{% for listing in listings %}
-		<p> {{listing.title}} </p>
-	{% endfor %}
+	<div class="grid-container">
+		<div class="grid-x grid-padding-x small-up-2 medium-up-3">
+			{% for listing in listings %}
+
+			<div class="cell">
+				<div class="card">
+					<img src="static/img/rectangle.jpg">
+					<div class="card-section">
+						<h4>{{listing.title}}</h4>
+						<p class="item-body">
+							{{listing.body}}
+						</p>
+						<hr/>
+						<div class="callout clearfix">
+							<div class="float-left item-price">
+								${{listing.price}}
+							</div>
+							<a class="item-link float-right" href="/listings/{{listing.id}}">
+								<button type="button" class="button success item-link-button">
+									View
+								</button>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			{% endfor %}
+		</div>
+	</div>
 
 {% endblock %}
