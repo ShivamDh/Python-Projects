@@ -1,18 +1,94 @@
-.title-link {
+body.layout-body {
+	background-color: #d4d4d4;
+}
+
+div.top-bar {
+
+}
+
+a.title-link {
 	font-size: 24px;
 	text-decoration: none;
 	background: transparent;
 }
 
-.title-link li.menu-text {
+a.title-link li.menu-text {
 	padding: 0;
 }
 
-.search-button {
+.button.search-button {
 	margin-right: 10px;
+	border-radius: 10px;
 }
 
-.sign-in-button {
+.button.search-button:hover, .button.search-button:focus {
+  background-color: #c1ccd4;
+}
+
+a.signin-link {
+	text-decoration: none;
+	background: transparent;
+	padding: 0;
+}
+
+.button.sign-in-button {
 	margin-left: 30px;
 	margin-right: 10px;
+	border-radius: 10px;
+}
+
+.button.clear.sign-in-button:hover, .button.clear.sign-in-button:focus {
+  background-color: #a9c5d8;
+}
+
+div.heading {
+	margin: 30px 20px;
+	text-align: center;
+	background-color: #7c19ec;
+}
+
+div.heading-title {
+	font-size: 70px;
+	font-weight: bold;
+	color: #f1e899;
+}
+
+div.heading-2 {
+	font-size: 30px;
+	color: #c5ba54;
+	padding-bottom: 10px;
+}
+
+p.item-body {
+	height: 75px;
+	overflow: hidden;
+}
+
+div.item-image-container {
+	height: 200px;
+	background-color: #acacac;
+}
+
+img.item-image {
+    display: block;
+    width: auto;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto
+}
+
+div.item-price {
+	padding-top: 3px;
+	font-size: 22px;
+	font-weight: bold;
+}
+
+a.item-link {
+	text-decoration: none;
+	background: transparent;
+	padding: 0;
+}
+
+.button.success.item-link-button {
+	margin: 0;
 }

@@ -1,15 +1,19 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-	<h1> Listings </h1>
-
 	<div class="grid-container">
+		<h1 class="title">
+			Listings
+		</h1>
+
 		<div class="grid-x grid-padding-x small-up-2 medium-up-3">
 			{% for listing in listings %}
 
 			<div class="cell">
 				<div class="card">
-					<img src="static/img/rectangle.jpg">
+					<div class="item-image-container">
+						<img class="item-image" src="{{listing.image}}">
+					</div>
 					<div class="card-section">
 						<h4>{{listing.title}}</h4>
 						<p class="item-body">
@@ -29,7 +33,6 @@
 					</div>
 				</div>
 			</div>
-
 
 			{% endfor %}
 		</div>
