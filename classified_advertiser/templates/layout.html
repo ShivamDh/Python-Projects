@@ -10,7 +10,7 @@
 		
 		<title> Classified Advertiser </title>
 	</head>
-	<body>
+	<body class="layout-body">
 		<div class="top-bar">
 			<div class="top-bar-left">
 				<ul class="dropdown menu right" data-dropdown-menu>
@@ -25,14 +25,16 @@
 						<input type="search" placeholder="Search">
 					</li>
 					<li>
-						<button type="button" class="button search-button">
+						<button type="button" class="button hollow search-button">
 							Search
 						</button>
 					</li>
 					<li>
-						<button type="button" class="button sign-in-button">
-							Sign In
-						</button>
+						<a class="signin-link" href="/signin">
+							<button type="button" class="button clear sign-in-button">
+								Register / Sign In
+							</button>
+						</a>
 					</li>
 				</ul>
 			</div>
@@ -40,6 +42,11 @@
 
 
 		{% block body %}{% endblock %}
+
+
+		<div class="nav-bar">
+			
+		</div>
 
 		<script src="/static/js/vendor/jquery.js"></script>
 	    <script src="/static/js/vendor/foundation.js"></script>

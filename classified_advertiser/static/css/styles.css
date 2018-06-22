@@ -92,3 +92,22 @@ a.item-link {
 .button.success.item-link-button {
 	margin: 0;
 }
+
+
+div.view-more {
+	text-align: center;
+}
+
+h1.title {
+	font-size: 55px;
+}
+
+
+
+
+
+div.nav-bar {
+	min-height: 200px;
+	background-color: black;
+}
+
