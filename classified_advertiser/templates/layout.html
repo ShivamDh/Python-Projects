@@ -14,9 +14,11 @@
 		<div class="top-bar">
 			<div class="top-bar-left">
 				<ul class="dropdown menu right" data-dropdown-menu>
-					<a class="title-link" href="/">
-						<li class="menu-text">Classifieds</li>
-					</a>
+					<li>
+						<a class="title-link" href="/">
+							Classifieds
+						</a>
+					</li>
 				</ul>
 			</div>
 			<div class="top-bar-right">
@@ -40,16 +42,21 @@
 			</div>
 		</div>
 
-
-		{% block body %}{% endblock %}
-
+		{% block body %}
+		{% endblock %}
 
 		<div class="nav-bar">
-			
+			<div class="grid-container">
+				<div class="grid-x grid-margin-x">
+					<div class="column-1 small-12 medium-4">CLASSIFIEDS</div>
+					<div class="column-2 small-12 medium-4">ABOUT</div>
+					<div class="column-3 small-12 medium-4">CONTACT</div>
+				</div>
+			</div>
 		</div>
 
 		<script src="/static/js/vendor/jquery.js"></script>
-	    <script src="/static/js/vendor/foundation.js"></script>
-	    <script src="/static/js/app.js"></script>
+		<script src="/static/js/vendor/foundation.js"></script>
+		<script src="/static/js/app.js"></script>
 	</body>
 </html>
