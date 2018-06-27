@@ -1,5 +1,20 @@
+{% from "formhelper.html" import render_field %}
+
 {% extends 'layout.html' %}
 
 {% block body %}
-	REGISTER
+
+	<h1> REGISTER </h1>
+	<form method="POST" action="">
+		<div class="grid-container">
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{{render_field(form.name)}}
+			</div>
+			<div class="grid-x">
+				<input type="submit" class="button success item-link-button" value="Register" />
+			</div>
+		</div>
+	</form>
+</form>
+
 {% endblock %}
