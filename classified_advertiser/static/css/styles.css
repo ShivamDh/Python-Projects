@@ -113,3 +113,19 @@ div.nav-bar {
 	color: white;
 }
 
+.grid-padding-y>div.cell.field-cell {
+	padding-top: 0;
+}
+
+input.name-field-error, input.username-field-error, input.email-field-error, input.password-field-error, input.confirm-field-error {
+	margin-bottom: 0;
+	box-shadow: 0 0 3px red;
+}
+
+p.error-help {
+	margin-bottom: 0;
+}
+
+span.help-inline {
+	margin-left: 10px;
+}

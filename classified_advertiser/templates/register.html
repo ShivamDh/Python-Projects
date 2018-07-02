@@ -8,7 +8,39 @@
 	<form method="POST" action="">
 		<div class="grid-container">
 			<div class="grid-x grid-padding-x grid-padding-y">
-				{{render_field(form.name)}}
+				{% if form.name.errors %}
+					{{render_field(form.name, class_="name-field-error")}}
+				{% else %}
+					{{render_field(form.name, class_="name-field")}}
+				{% endif %}
+			</div>
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{% if form.username.errors %}
+					{{render_field(form.username, class_="username-field-error")}}
+				{% else %}
+					{{render_field(form.username, class_="username-field")}}
+				{% endif %}
+			</div>
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{% if form.email.errors %}
+					{{render_field(form.email, class_="email-field-error")}}
+				{% else %}
+					{{render_field(form.email, class_="email-field")}}
+				{% endif %}
+			</div>
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{% if form.password.errors %}
+					{{render_field(form.password, class_="password-field-error")}}
+				{% else %}
+					{{render_field(form.password, class_="password-field")}}
+				{% endif %}
+			</div>
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{% if form.confirm.errors %}
+					{{render_field(form.confirm, class_="confirm-field-error")}}
+				{% else %}
+					{{render_field(form.confirm, class_="confirm-field")}}
+				{% endif %}
 			</div>
 			<div class="grid-x">
 				<input type="submit" class="button success item-link-button" value="Register" />
