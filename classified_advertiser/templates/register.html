@@ -15,17 +15,17 @@
 				{% endif %}
 			</div>
 			<div class="grid-x grid-padding-x grid-padding-y">
-				{% if form.username.errors %}
-					{{render_field(form.username, class_="username-field-error")}}
-				{% else %}
-					{{render_field(form.username, class_="username-field")}}
-				{% endif %}
-			</div>
-			<div class="grid-x grid-padding-x grid-padding-y">
 				{% if form.email.errors %}
 					{{render_field(form.email, class_="email-field-error")}}
 				{% else %}
 					{{render_field(form.email, class_="email-field")}}
+				{% endif %}
+			</div>
+			<div class="grid-x grid-padding-x grid-padding-y">
+				{% if form.username.errors %}
+					{{render_field(form.username, class_="username-field-error")}}
+				{% else %}
+					{{render_field(form.username, class_="username-field")}}
 				{% endif %}
 			</div>
 			<div class="grid-x grid-padding-x grid-padding-y">
