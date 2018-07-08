@@ -98,13 +98,16 @@ a.item-link {
 	border-radius: 25px;
 }
 
-
 div.view-more {
 	text-align: center;
 }
 
 h1.title {
 	font-size: 55px;
+}
+
+div.message-continer.grid-container {
+	margin-top: 15px;
 }
 
 div.nav-bar {
