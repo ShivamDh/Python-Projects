@@ -106,7 +106,7 @@ h1.title {
 	font-size: 55px;
 }
 
-div.message-continer.grid-container {
+div.message-container.grid-container {
 	margin-top: 15px;
 }
 
@@ -116,7 +116,7 @@ div.nav-bar {
 	color: white;
 }
 
-.grid-padding-y>div.cell.field-cell {
+.grid-padding-y > div.cell.field-cell {
 	padding-top: 0;
 }
 

@@ -51,11 +51,20 @@ def register():
 		username = form.username.data
 		password = sha256_crypt.encrypt(str(form.password.data))
 
-		cnx = mysql.connector.connect(user='main', password=db_password, host='127.0.0.1', database='classified_advertiser')
+		cnx = mysql.connector.connect(
+			user='main',
+			password=db_password,
+			host='127.0.0.1',
+			database='classified_advertiser'
+		)
 		cursor = cnx.cursor()
 
-		cursor.execute('INSERT INTO users(name, email, username, password) VALUES (%s, %s, %s, %s)', (name, email, username, password))
+		cursor.execute(
+			'INSERT INTO users(name, email, username, password) VALUES (%s, %s, %s, %s)',
+			(name, email, username, password)
+		)
 
+		# Commit all the changes into the database
 		cnx.commit()
 
 		cursor.close()
