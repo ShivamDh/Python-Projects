@@ -21,9 +21,9 @@ def listings():
 def listing(id):
 	return render_template('listing.html', id = id)
 
-@app.route('/signin')
-def signin():
-	return render_template('signin.html')
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	return render_template('login.html')
 
 class RegisterForm(Form):
 	name = StringField('Name', [validators.Length(min=1, max=100)])
@@ -70,9 +70,9 @@ def register():
 		cursor.close()
 		cnx.close()
 
-		flash('The user has been registered, start making your listings now!', 'success')
+		flash('The user has been registered, login and start making your listings now!', 'success')
 
-		return redirect(url_for('index'))
+		return redirect(url_for('login'))
 	return render_template('register.html', form=form)
 
 
