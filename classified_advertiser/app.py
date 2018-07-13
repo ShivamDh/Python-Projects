@@ -23,6 +23,43 @@ def listing(id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+	if request.method == 'POST':
+		app.logger.info(request.form)
+
+		username = request.form['username']
+		password = request.form['password']
+
+		app.logger.info(username)
+		app.logger.info(password)
+
+		cnx = mysql.connector.connect(
+			user='main',
+			password=db_password,
+			host='127.0.0.1',
+			database='classified_advertiser'
+		)
+		cursor = cnx.cursor()
+
+		query = ("SELECT * FROM users WHERE username = %s")
+
+		cursor.execute(query, (username, ))
+
+		results = cursor.fetchall()
+		if len(results) > 0:
+			first_result = results[0]
+
+			if sha256_crypt.verify(password, first_result[4]):
+				app.logger.info('PASSWORD MATCHED')
+			else:
+				error = 'Incorrect Password, please try again'
+				return render_template('login.html', error=error)
+		else:
+			cursor.close()
+			cnx.close()
+
+			error = 'Username not found, please register'
+			return render_template('login.html', error=error)
+
 	return render_template('login.html')
 
 class RegisterForm(Form):
