@@ -8,4 +8,12 @@
 		{% endif %}
 	{% endwith %}
 
+	{% if error %}
+		<div class="callout alert">{{ error }}</div>
+	{% endif %}
+
+	{% if msg %}
+		<div class="callout success">{{ msg }}</div>
+	{% endif %}	
+
 </div>
