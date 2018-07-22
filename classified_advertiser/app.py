@@ -1,9 +1,11 @@
-from flask import Flask, render_template, flash, redirect, url_for, request
+from flask import Flask, render_template, flash, redirect, url_for, request, session
 from data import Listings
 from wtforms import Form, StringField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from app_details import db_password, app_secret_key
+from functools import wraps
 import mysql.connector
+
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -49,7 +51,11 @@ def login():
 			first_result = results[0]
 
 			if sha256_crypt.verify(password, first_result[4]):
-				app.logger.info('PASSWORD MATCHED')
+				session['logged_in'] = True
+				session['username'] = username
+
+				flash('You are now logged in', 'success')
+				return redirect(url_for('dashboard'))
 			else:
 				error = 'Incorrect Password, please try again'
 				return render_template('login.html', error=error)
@@ -112,6 +118,26 @@ def register():
 		return redirect(url_for('login'))
 	return render_template('register.html', form=form)
 
+def is_logged_in(f):
+	@wraps(f)
+	def wrap(*args, **kwargs):
+		if 'logged_in' in session:
+			return f(*args, **kwargs)
+		else:
+			flash('Unauthorized, Please login to view your dashboard', 'alert')
+			return redirect(url_for('login'))
+	return wrap
+
+@app.route('/logout')
+def logout():
+	session.clear()
+	flash('You are now logged out', 'success')
+	return redirect(url_for('login'))
+
+@app.route('/dashboard')
+@is_logged_in
+def dashboard():
+	return render_template('dashboard.html')
 
 if __name__ == '__main__':
 	app.secret_key = app_secret_key
