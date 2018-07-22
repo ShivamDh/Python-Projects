@@ -6,24 +6,34 @@
 		<div class="grid-y medium-grid-frame">
 			<div class="cell medium-auto medium-cell-block-container">
 				<div class="grid-x grid-padding-x">
-					<div class="cell medium-8 medium-cell-block-y">
+					<div class="cell medium-5 medium-cell-block-y">
 						<form method="POST" action="">
 							<div class="grid-x grid-padding-x grid-padding-y">
 								<div class="field-cell cell small-8 medium-11 large-10">
 									<label> Username </label>
-									<input type="text" placeholder="Username" name="username" />
+									<input type="text" placeholder="Username" name="username" class="login-username" />
 								</div>
 							</div>
 							<div class="grid-x grid-padding-x grid-padding-y">
 								<div class="field-cell cell small-8 medium-11 large-10">
 									<label> Password </label>
-									<input type="password" placeholder="Password" name="password" />
+									<input type="password" placeholder="Password" name="password" class="login-password" />
 								</div>
 							</div>
 							<div class="grid-x">
 								<input type="submit" class="button success item-link-button" value="Login" />
 							</div>
 						</form>
+					</div>
+					<div class="cell medium-5 medium-cell-block-y register-now">
+						<h3 class="register-now-title">Not Registered Yet?</h3>
+						<p> Register now to post, edit, and manage your classifieds </p>
+						<p> It’s simple, quick, and free! </p>
+						<a class="signin-link" href="/register">
+							<button type="button" class="button primary register-now-button">
+								Register Now!
+							</button>
+						</a>
 					</div>
 				</div>
 			</div>
