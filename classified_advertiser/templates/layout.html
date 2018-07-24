@@ -31,13 +31,23 @@
 							Search
 						</button>
 					</li>
-					<li>
-						<a class="signin-link" href="/login">
-							<button type="button" class="button clear sign-in-button">
-								Register / Login
-							</button>
-						</a>
-					</li>
+					{% if session.logged_in %}
+						<li>
+							<a class="signin-link" href="/logout">
+								<button type="button" class="button clear sign-out-button">
+									Logout
+								</button>
+							</a>
+						</li>
+					{% else %}
+						<li>
+							<a class="signin-link" href="/login">
+								<button type="button" class="button clear sign-in-button">
+									Register / Login
+								</button>
+							</a>
+						</li>						
+					{% endif %}
 				</ul>
 			</div>
 		</div>

@@ -45,6 +45,16 @@ a.signin-link {
   background-color: #a9c5d8;
 }
 
+.button.sign-out-button {
+	margin-left: 30px;
+	margin-right: 10px;
+	border-radius: 10px;
+}
+
+.button.clear.sign-out-button:hover, .button.clear.sign-out-button:focus {
+  background-color: #a9c5d8;
+}
+
 div.heading {
 	margin: 30px 20px;
 	text-align: center;
