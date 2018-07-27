@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, request, session
 from data import Listings
-from wtforms import Form, StringField, PasswordField, validators
+from wtforms import Form, StringField, PasswordField, TextAreaField, DecimalField, validators
 from passlib.hash import sha256_crypt
 from app_details import db_password, app_secret_key
 from functools import wraps
@@ -53,6 +53,7 @@ def login():
 			if sha256_crypt.verify(password, first_result[4]):
 				session['logged_in'] = True
 				session['username'] = username
+				session['user_id'] = first_result[0]
 
 				flash('You are now logged in', 'success')
 				return redirect(url_for('dashboard'))
@@ -138,6 +139,45 @@ def logout():
 @is_logged_in
 def dashboard():
 	return render_template('dashboard.html')
+
+class PostForm(Form):
+	title = StringField('Title', [validators.Length(min=6, max=255)])
+	body = TextAreaField('Body', [validators.Length(min=10)])
+	price = DecimalField('Price', [validators.Length(min=4)])
+
+@app.route('/create_post')
+@is_logged_in
+def create_post():
+	form = PostForm(request.form)
+	if request.method == 'POST' and form.validate():
+		title = form.title.data
+		body = form.body.data
+		price = form.price.data
+
+		cnx = mysql.connector.connect(
+			user='main',
+			password=db_password,
+			host='127.0.0.1',
+			database='classified_advertiser'
+		)
+		cursor = cnx.cursor()
+
+		cursor.execute(
+			'INSERT INTO posts(title, author_id, body, price) VALUES (%s, %s, %s, %d)',
+			(title, session['user_id'], body, price)
+		)
+
+		# Commit all the changes into the database
+		cnx.commit()
+
+		cursor.close()
+		cnx.close()
+
+		flash('The post has been created!', 'success')
+
+		return redirect(url_for('dashboard'))
+
+	return render_template('create_post.html', form=form)
 
 if __name__ == '__main__':
 	app.secret_key = app_secret_key
