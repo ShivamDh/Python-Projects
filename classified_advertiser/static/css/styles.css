@@ -156,3 +156,17 @@ p.error-help {
 span.help-inline {
 	margin-left: 10px;
 }
+
+.create-post-button {
+	border-radius: 10px;
+	margin-bottom: 0px;
+}
+
+input.title-field-error, input.body-field-error, input.price-field-error {
+	margin-bottom: 0;
+	box-shadow: 0 0 3px red;
+}
+
+.input-group-label {
+	margin-bottom: 16px;
+}

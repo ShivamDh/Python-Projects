@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+
+	<div class="grid-container">
+
+		<h1> Dashboard </h1>
+		<h1> <small> Welcome {{session.username}} </small> </h1>
+
+		<a class="create-post-link" href="/create_post">
+			<button type="button" class="create-post-button button success">
+				Create Post
+			</button>
+		</a>
+
+		<hr/>
+
+		<table class="hover">
+			<thead>
+				<tr>
+					<th width="100"> Article ID </th>
+					<th> Title </th>
+					<th width="150"> Price($) </th>
+					<th width="150"> Last Updated </th>
+					<th> </th>
+					<th> </th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for post in posts %}
+					<tr>
+						<td> {{post[0]}} </td>
+						<td> {{post[1]}} </td>
+						<td> {{post[4]}} </td>
+						<td> {{post[5]}} </td>
+						<td>
+							<a href="edit_article/{{post[0]}}" class="button success">
+								Edit
+							</a>
+						</td>
+						<td>
+							<a href="#" class="button alert">
+								Delete
+							</a>
+						</td>
+						
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+	</div>
+
+{% endblock %}
