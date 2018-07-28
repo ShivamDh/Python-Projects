@@ -1,0 +1,15 @@
+{% macro render_textarea(field) %}
+	<div class="field-cell cell small-12 large-9">
+		{{ field.label }}
+		{{ field(**kwargs)|safe }}
+		{% if field.errors %}
+			{% for error in field.errors %}
+				<p class="error-help">
+					<span class="help-inline">
+						<small> {{ error }} </small>
+					</span>
+				</p>
+			{% endfor %}
+		{% endif %}
+	</div>
+{% endmacro %}
