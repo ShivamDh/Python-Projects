@@ -141,11 +141,11 @@ def dashboard():
 	return render_template('dashboard.html')
 
 class PostForm(Form):
-	title = StringField('Title', [validators.Length(min=6, max=255)])
-	body = TextAreaField('Body', [validators.Length(min=10)])
-	price = DecimalField('Price', [validators.Length(min=4)])
+	title = StringField('Title', [validators.Length(min=2, max=255)])
+	body = TextAreaField('Body', [validators.Length(min=6)])
+	price = DecimalField('Price', [])
 
-@app.route('/create_post')
+@app.route('/create_post', methods=['GET', 'POST'])
 @is_logged_in
 def create_post():
 	form = PostForm(request.form)
@@ -163,7 +163,7 @@ def create_post():
 		cursor = cnx.cursor()
 
 		cursor.execute(
-			'INSERT INTO posts(title, author_id, body, price) VALUES (%s, %s, %s, %d)',
+			'INSERT INTO posts(title, author_id, body, price) VALUES (%s, %s, %s, %s)',
 			(title, session['user_id'], body, price)
 		)
 
