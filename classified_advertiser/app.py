@@ -138,7 +138,26 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-	return render_template('dashboard.html')
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	query = ("SELECT * FROM posts WHERE author_id = %s")
+
+	cursor.execute(query, (session['user_id'], ))
+
+	results = cursor.fetchall()
+	print(results)
+
+	if len(results) > 0:
+		return render_template('dashboard.html', listings=results)
+	else:
+		msg = 'No posts created by user, create one now!'
+		return render_template('dashboard.html', msg=msg)
 
 class PostForm(Form):
 	title = StringField('Title', [validators.Length(min=2, max=255)])

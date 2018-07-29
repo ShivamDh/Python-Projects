@@ -9,7 +9,7 @@
 
 		<a class="create-post-link" href="/create_post">
 			<button type="button" class="create-post-button button success">
-				Create Post
+				Create Listing
 			</button>
 		</a>
 
@@ -24,17 +24,23 @@
 					<th width="150"> Last Updated </th>
 					<th> </th>
 					<th> </th>
+					<th> </th>
 				</tr>
 			</thead>
 			<tbody>
-				{% for post in posts %}
+				{% for listing in listings %}
 					<tr>
-						<td> {{post[0]}} </td>
-						<td> {{post[1]}} </td>
-						<td> {{post[4]}} </td>
-						<td> {{post[5]}} </td>
+						<td> {{listing[0]}} </td>
+						<td> {{listing[1]}} </td>
+						<td> {{listing[4]}} </td>
+						<td> {{listing[5]}} </td>
 						<td>
-							<a href="edit_article/{{post[0]}}" class="button success">
+							<a href="/listings/{{listing[0]}}" class="button primary">
+								View
+							</a>
+						</td>
+						<td>
+							<a href="edit_article/{{listing[0]}}" class="button secondary">
 								Edit
 							</a>
 						</td>
