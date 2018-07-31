@@ -17,7 +17,25 @@ def index():
 
 @app.route('/listings')
 def listings():
-	return render_template('listings.html', listings = Listings)
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	query = ("SELECT * FROM posts")
+
+	cursor.execute(query)
+
+	results = cursor.fetchall()
+
+	if len(results) > 0:
+		return render_template('listings.html', listings=results)
+	else:
+		msg = 'No listings online!'
+		return render_template('listings.html', msg=msg)
 
 @app.route('/listings/<string:id>')
 def listing(id):
@@ -151,12 +169,11 @@ def dashboard():
 	cursor.execute(query, (session['user_id'], ))
 
 	results = cursor.fetchall()
-	print(results)
 
 	if len(results) > 0:
 		return render_template('dashboard.html', listings=results)
 	else:
-		msg = 'No posts created by user, create one now!'
+		msg = 'No listings created by user, create one now!'
 		return render_template('dashboard.html', msg=msg)
 
 class PostForm(Form):
