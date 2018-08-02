@@ -23,14 +23,12 @@
 							<img class="item-image" src="{{listing.image}}">
 						</div>
 						<div class="card-section">
-							<h4>{{listing.title}}</h4>
-							<p class="item-body">
-								{{listing.body}}
-							</p>
+							<h4> {{ listing[1] }} </h4>
+							{{ listing[3]|safe }}
 							<hr/>
 							<div class="callout clearfix">
 								<div class="float-left item-price">
-									${{listing.price}}
+									${{ listing[4] }}
 								</div>
 								<a class="item-link float-right" href="/listings/{{listing.id}}">
 									<button type="button" class="button success item-link-button">

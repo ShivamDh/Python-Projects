@@ -73,14 +73,13 @@ div.heading-2 {
 	padding-bottom: 10px;
 }
 
-p.item-body {
+div.item-body {
 	height: 75px;
 	overflow: hidden;
 }
 
 div.item-image-container {
 	height: 200px;
-	background-color: #3c3939;
 }
 
 img.item-image {
@@ -169,4 +168,10 @@ input.title-field-error, input.body-field-error, input.price-field-error {
 
 .input-group-label {
 	margin-bottom: 16px;
+}
+
+td.listing-body {
+	display: flex;
+	height: 60px;
+	overflow: hidden;
 }

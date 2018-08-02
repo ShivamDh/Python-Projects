@@ -1,5 +1,4 @@
 from flask import Flask, render_template, flash, redirect, url_for, request, session
-from data import Listings
 from wtforms import Form, StringField, PasswordField, TextAreaField, DecimalField, validators
 from passlib.hash import sha256_crypt
 from app_details import db_password, app_secret_key
@@ -9,11 +8,26 @@ import mysql.connector
 
 app = Flask(__name__, static_url_path='/static')
 
-Listings = Listings()
-
 @app.route('/')
 def index():
-	return render_template('home.html', listings = Listings[:3])
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	query = ("SELECT * FROM posts")
+
+	cursor.execute(query)
+
+	results = cursor.fetchall()
+
+	if len(results) > 0:
+		return render_template('home.html', listings=results[:3])
+	else:
+		return render_template('home.html', listings=[])
 
 @app.route('/listings')
 def listings():
