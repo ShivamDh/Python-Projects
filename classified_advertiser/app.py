@@ -48,12 +48,30 @@ def listings():
 	if len(results) > 0:
 		return render_template('listings.html', listings=results)
 	else:
-		msg = 'No listings online!'
-		return render_template('listings.html', msg=msg)
+		flash('No listings online!', 'warning')
+		return render_template('listings.html')
 
-@app.route('/listings/<string:id>')
-def listing(id):
-	return render_template('listing.html', id = id)
+@app.route('/listings/<string:listing_id>')
+def listing(listing_id):
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	query = ("SELECT * FROM posts WHERE id = %s")
+
+	cursor.execute(query, (listing_id, ))
+
+	result = cursor.fetchone()
+
+	if result is not None:
+		return render_template('listing.html', listing=result)
+	else:
+		flash('Not a valid listing!', 'alert')
+		return render_template('listing.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -187,8 +205,8 @@ def dashboard():
 	if len(results) > 0:
 		return render_template('dashboard.html', listings=results)
 	else:
-		msg = 'No listings created by user, create one now!'
-		return render_template('dashboard.html', msg=msg)
+		flash('No listings created by user, create one now!', 'warning')
+		return render_template('dashboard.html')
 
 class PostForm(Form):
 	title = StringField('Title', [validators.Length(min=2, max=255)])
