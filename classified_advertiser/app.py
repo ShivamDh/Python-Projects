@@ -213,9 +213,9 @@ class PostForm(Form):
 	body = TextAreaField('Body', [validators.Length(min=6)])
 	price = DecimalField('Price', [])
 
-@app.route('/create_post', methods=['GET', 'POST'])
+@app.route('/create_listing', methods=['GET', 'POST'])
 @is_logged_in
-def create_post():
+def create_listing():
 	form = PostForm(request.form)
 	if request.method == 'POST' and form.validate():
 		title = form.title.data
@@ -245,7 +245,7 @@ def create_post():
 
 		return redirect(url_for('dashboard'))
 
-	return render_template('create_post.html', form=form)
+	return render_template('create_listing.html', form=form)
 
 if __name__ == '__main__':
 	app.secret_key = app_secret_key
