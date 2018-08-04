@@ -1,0 +1,43 @@
+{% from "formhelper.html" import render_field %}
+{% from "textareaformhelper.html" import render_textarea %}
+{% from "priceformhelper.html" import render_price_field %}
+
+{% extends 'layout.html' %}
+
+{% block body %}
+
+	<div class="grid-container">
+	
+		<h1> Edit a Listing </h1>
+		<form method="POST" action="">
+			<div class="grid-container">
+				<div class="grid-x grid-padding-x grid-padding-y">
+					{% if form.title.errors %}
+						{{render_field(form.title, class_="title-field-error")}}
+					{% else %}
+						{{render_field(form.title, class_="title-field")}}
+					{% endif %}
+				</div>
+				<div class="grid-x grid-padding-x grid-padding-y">
+					{% if form.body.errors %}
+						{{render_textarea(form.body, class_="body-field-error", id="editor")}}
+					{% else %}
+						{{render_textarea(form.body, class_="body-field", id="editor")}}
+					{% endif %}
+				</div>
+				<div class="grid-x grid-padding-x grid-padding-y">
+					{% if form.price.errors %}
+						{{render_price_field(form.price, class_="price-field-error")}}
+					{% else %}
+						{{render_price_field(form.price, class_="price-field")}}
+					{% endif %}
+				</div>
+				<div class="grid-x">
+					<input type="submit" class="button success item-link-button" value="Update" />
+				</div>
+			</div>
+		</form>
+
+	</div>
+
+{% endblock %}
