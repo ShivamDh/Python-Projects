@@ -247,6 +247,54 @@ def create_listing():
 
 	return render_template('create_listing.html', form=form)
 
+@app.route('/edit_listing/<string:listing_id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_listing(listing_id):
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
+
+	article = cursor.fetchone()
+
+	form = PostForm(request.form)
+
+	form.title.data = article[1]
+	form.body.data = article[3]
+	form.price.data = article[4]
+
+	if request.method == 'POST' and form.validate():
+		title = request.form['title']
+		body = request.form['body']
+		price = request.form['price']
+
+		cursor = cnx.cursor()
+
+		cursor.execute(
+			'UPDATE posts SET title = %s, body = %s, price = %s WHERE id = %s',
+			(title, body, price, listing_id)
+		)
+
+		# Commit all the changes into the database
+		cnx.commit()
+
+		cursor.close()
+		cnx.close()
+
+		flash('The post has been updated!', 'success')
+
+		return redirect(url_for('dashboard'))
+	else:
+		cursor.close()
+		cnx.close()
+
+	return render_template('edit_listing.html', form=form)	
+
 if __name__ == '__main__':
 	app.secret_key = app_secret_key
 	app.run(debug=True)
