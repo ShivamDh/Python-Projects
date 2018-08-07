@@ -18,14 +18,12 @@ def index():
 	)
 	cursor = cnx.cursor()
 
-	query = ("SELECT * FROM posts")
+	cursor.execute('SELECT * FROM posts')
 
-	cursor.execute(query)
-
-	results = cursor.fetchall()
+	results = cursor.fetchmany(size=3)
 
 	if len(results) > 0:
-		return render_template('home.html', listings=results[:3])
+		return render_template('home.html', listings=results)
 	else:
 		return render_template('home.html', listings=[])
 
@@ -39,9 +37,7 @@ def listings():
 	)
 	cursor = cnx.cursor()
 
-	query = ("SELECT * FROM posts")
-
-	cursor.execute(query)
+	cursor.execute('SELECT * FROM posts')
 
 	results = cursor.fetchall()
 
@@ -61,9 +57,7 @@ def listing(listing_id):
 	)
 	cursor = cnx.cursor()
 
-	query = ("SELECT * FROM posts WHERE id = %s")
-
-	cursor.execute(query, (listing_id, ))
+	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
 
 	result = cursor.fetchone()
 
@@ -92,9 +86,7 @@ def login():
 		)
 		cursor = cnx.cursor()
 
-		query = ("SELECT * FROM users WHERE username = %s")
-
-		cursor.execute(query, (username, ))
+		cursor.execute('SELECT * FROM users WHERE username = %s', (username, ))
 
 		results = cursor.fetchall()
 		if len(results) > 0:
@@ -295,6 +287,29 @@ def edit_listing(listing_id):
 
 	return render_template('edit_listing.html', form=form)	
 
+@app.route('/delete_listing/<string:listing_id>', methods=['POST'])
+@is_logged_in
+def delete_listing(listing_id):
+	cnx = mysql.connector.connect(
+		user='main',
+		password=db_password,
+		host='127.0.0.1',
+		database='classified_advertiser'
+	)
+	cursor = cnx.cursor()
+
+	cursor.execute('DELETE FROM posts WHERE id = %s', (listing_id, ))
+
+	# Commit all the changes into the database
+	cnx.commit()
+
+	cursor.close()
+
+	flash('Listing Deleted', 'success')
+
+	return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
 	app.secret_key = app_secret_key
 	app.run(debug=True)
+
