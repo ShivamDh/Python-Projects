@@ -3,7 +3,6 @@
 {% block body %}
 
 	<div class="grid-container">
-
 		<h1> Dashboard </h1>
 		<h1> <small> Welcome {{ session.username }} </small> </h1>
 
@@ -12,9 +11,7 @@
 				Create Listing
 			</button>
 		</a>
-
 		<hr/>
-
 		<table class="hover">
 			<thead>
 				<tr>
@@ -52,12 +49,10 @@
 								<input type="submit" value="Delete" class="button alert">
 							</form>
 						</td>
-						
 					</tr>
 				{% endfor %}
 			</tbody>
 		</table>
-
 	</div>
 
 {% endblock %}

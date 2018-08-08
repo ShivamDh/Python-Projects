@@ -145,6 +145,19 @@ def register():
 		)
 		cursor = cnx.cursor()
 
+		cursor.execute('SELECT username FROM users')
+		usernames_results = cursor.fetchall()
+
+		signed_up_usernames = sum(usernames_results, ())
+
+		if username in signed_up_usernames:
+			flash('This username is in use, please select a new username', 'alert')
+
+			cursor.close()
+			cnx.close()
+			
+			return redirect(url_for('register'))
+
 		cursor.execute(
 			'INSERT INTO users(name, email, username, password) VALUES (%s, %s, %s, %s)',
 			(name, email, username, password)
