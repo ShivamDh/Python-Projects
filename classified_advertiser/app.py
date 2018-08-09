@@ -8,14 +8,17 @@ import mysql.connector
 
 app = Flask(__name__, static_url_path='/static')
 
-@app.route('/')
-def index():
-	cnx = mysql.connector.connect(
+def sql_connector():
+	return mysql.connector.connect(
 		user='main',
 		password=db_password,
 		host='127.0.0.1',
 		database='classified_advertiser'
 	)
+
+@app.route('/')
+def index():
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	cursor.execute('SELECT * FROM posts')
@@ -29,12 +32,7 @@ def index():
 
 @app.route('/listings')
 def listings():
-	cnx = mysql.connector.connect(
-		user='main',
-		password=db_password,
-		host='127.0.0.1',
-		database='classified_advertiser'
-	)
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	cursor.execute('SELECT * FROM posts')
@@ -49,12 +47,7 @@ def listings():
 
 @app.route('/listings/<string:listing_id>')
 def listing(listing_id):
-	cnx = mysql.connector.connect(
-		user='main',
-		password=db_password,
-		host='127.0.0.1',
-		database='classified_advertiser'
-	)
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
@@ -78,12 +71,7 @@ def login():
 		app.logger.info(username)
 		app.logger.info(password)
 
-		cnx = mysql.connector.connect(
-			user='main',
-			password=db_password,
-			host='127.0.0.1',
-			database='classified_advertiser'
-		)
+		cnx = sql_connector()
 		cursor = cnx.cursor()
 
 		cursor.execute('SELECT * FROM users WHERE username = %s', (username, ))
@@ -137,12 +125,7 @@ def register():
 		username = form.username.data
 		password = sha256_crypt.encrypt(str(form.password.data))
 
-		cnx = mysql.connector.connect(
-			user='main',
-			password=db_password,
-			host='127.0.0.1',
-			database='classified_advertiser'
-		)
+		cnx = sql_connector()
 		cursor = cnx.cursor()
 
 		cursor.execute('SELECT username FROM users')
@@ -155,7 +138,7 @@ def register():
 
 			cursor.close()
 			cnx.close()
-			
+
 			return redirect(url_for('register'))
 
 		cursor.execute(
@@ -193,12 +176,7 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-	cnx = mysql.connector.connect(
-		user='main',
-		password=db_password,
-		host='127.0.0.1',
-		database='classified_advertiser'
-	)
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	query = ("SELECT * FROM posts WHERE author_id = %s")
@@ -227,12 +205,7 @@ def create_listing():
 		body = form.body.data
 		price = form.price.data
 
-		cnx = mysql.connector.connect(
-			user='main',
-			password=db_password,
-			host='127.0.0.1',
-			database='classified_advertiser'
-		)
+		cnx = sql_connector()
 		cursor = cnx.cursor()
 
 		cursor.execute(
@@ -255,12 +228,7 @@ def create_listing():
 @app.route('/edit_listing/<string:listing_id>', methods=['GET', 'POST'])
 @is_logged_in
 def edit_listing(listing_id):
-	cnx = mysql.connector.connect(
-		user='main',
-		password=db_password,
-		host='127.0.0.1',
-		database='classified_advertiser'
-	)
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
@@ -303,12 +271,7 @@ def edit_listing(listing_id):
 @app.route('/delete_listing/<string:listing_id>', methods=['POST'])
 @is_logged_in
 def delete_listing(listing_id):
-	cnx = mysql.connector.connect(
-		user='main',
-		password=db_password,
-		host='127.0.0.1',
-		database='classified_advertiser'
-	)
+	cnx = sql_connector()
 	cursor = cnx.cursor()
 
 	cursor.execute('DELETE FROM posts WHERE id = %s', (listing_id, ))

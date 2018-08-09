@@ -3,12 +3,12 @@
 {% block body %}
 	<div class="grid-container">
 		{% if listing %}
-		<h1> {{ listing[1] }} </h1>
-		<small> Written by {{ listing[2] }} on {{ listing[5] }} </small>
-		<hr />
-		<div>
-			{{ listing[0]|safe }}
-		</div>
+			<h1> {{ listing[1] }} </h1>
+			<small> Written by {{ listing[2] }} on {{ listing[5] }} </small>
+			<hr />
+			<div>
+				{{ listing[0]|safe }}
+			</div>
 		{% endif %}
 	</div>
 {% endblock %}
