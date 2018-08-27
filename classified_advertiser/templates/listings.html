@@ -8,33 +8,34 @@
 
 		<div class="grid-x grid-padding-x small-up-2 medium-up-3">
 			{% for listing in listings %}
-
-			<div class="cell">
-				<div class="card">
-					<div class="item-image-container" style="background: url(/static/img/placeholder.jpg); background-size: cover">
-						<div class="item-image" src="/static/img/listing_{{listing[0]}}.jpg">
-						</div>
-					</div>
-					<div class="card-section">
-						<h4> {{ listing[1] }} </h4>
-						<div class="item-body">
-							{{ listing[3]|safe }}
-						</div>
-						<hr/>
-						<div class="callout clearfix">
-							<div class="float-left item-price">
-								${{ listing[4] }}
+				<div class="cell">
+					<div class="card">
+						<div class="item-image-container"
+							style="background: url(/static/img/placeholder.jpg); background-size: cover">
+							<div class="item-image" src="/static/img/listing_{{listing[0]}}.jpg">
 							</div>
-							<a class="item-link float-right" href="/listings/{{listing[0]}}">
-								<button type="button" class="button success item-link-button">
-									View
-								</button>
-							</a>
+						</div>
+						<div class="card-section">
+							<h4>
+								{{ listing[1] }}
+							</h4>
+							<div class="item-body">
+								{{ listing[3]|safe }}
+							</div>
+							<hr/>
+							<div class="callout clearfix">
+								<div class="float-left item-price">
+									${{ listing[4] }}
+								</div>
+								<a class="item-link float-right" href="/listings/{{listing[0]}}">
+									<button type="button" class="button success item-link-button">
+										View
+									</button>
+								</a>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-
 			{% endfor %}
 		</div>
 	</div>
