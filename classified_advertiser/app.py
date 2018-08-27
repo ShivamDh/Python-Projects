@@ -18,20 +18,26 @@ def sql_connector():
 
 @app.route('/')
 def index():
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# query for all information regardings listings, limit of 3 for home page
 	cursor.execute('SELECT * FROM posts')
-
 	results = cursor.fetchmany(size=3)
 
 	if len(results) > 0:
+		# found results, display the results
 		return render_template('home.html', listings=results)
 	else:
+		# no results, insert default paramater
 		return render_template('home.html', listings=[])
 
 @app.route('/listings')
 def listings():
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
@@ -47,6 +53,8 @@ def listings():
 
 @app.route('/listings/<string:listing_id>')
 def listing(listing_id):
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
@@ -71,6 +79,7 @@ def login():
 		app.logger.info(username)
 		app.logger.info(password)
 
+		# make SQL db connection and get cursor
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
@@ -125,6 +134,7 @@ def register():
 		username = form.username.data
 		password = sha256_crypt.encrypt(str(form.password.data))
 
+		# make SQL db connection and get cursor
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
@@ -176,6 +186,8 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
@@ -205,6 +217,7 @@ def create_listing():
 		body = form.body.data
 		price = form.price.data
 
+		# make SQL db connection and get cursor
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
@@ -228,6 +241,8 @@ def create_listing():
 @app.route('/edit_listing/<string:listing_id>', methods=['GET', 'POST'])
 @is_logged_in
 def edit_listing(listing_id):
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
@@ -237,52 +252,56 @@ def edit_listing(listing_id):
 
 	form = PostForm(request.form)
 
+	# autofill the form when editing
 	form.title.data = article[1]
 	form.body.data = article[3]
 	form.price.data = article[4]
 
 	if request.method == 'POST' and form.validate():
-		title = request.form['title']
-		body = request.form['body']
-		price = request.form['price']
+		title = request.form['title'] || ''
+		body = request.form['body'] || ''
+		price = request.form['price'] || ''
 
-		cursor = cnx.cursor()
-
+		# execute update sql command to db with form details
 		cursor.execute(
 			'UPDATE posts SET title = %s, body = %s, price = %s WHERE id = %s',
 			(title, body, price, listing_id)
 		)
 
-		# Commit all the changes into the database
+		# commit all the changes into the database and close connection
 		cnx.commit()
-
 		cursor.close()
 		cnx.close()
 
 		flash('The post has been updated!', 'success')
 
 		return redirect(url_for('dashboard'))
-	else:
-		cursor.close()
-		cnx.close()
 
+	# close cursor and connection 
+	cursor.close()
+	cnx.close()
+
+	# return listing page with form to be filled
 	return render_template('edit_listing.html', form=form)	
 
 @app.route('/delete_listing/<string:listing_id>', methods=['POST'])
 @is_logged_in
 def delete_listing(listing_id):
+
+	# make SQL db connection and get cursor
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# Delete post relating to particular id
 	cursor.execute('DELETE FROM posts WHERE id = %s', (listing_id, ))
 
 	# Commit all the changes into the database
 	cnx.commit()
-
 	cursor.close()
+	cnx.close()
 
-	flash('Listing Deleted', 'success')
-
+	# Go back to the dashboard with success msg for deletion
+	flash('Listing has been deleted', 'success')
 	return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
