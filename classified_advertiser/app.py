@@ -41,15 +41,17 @@ def listings():
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# fetch information about all posts
 	cursor.execute('SELECT * FROM posts')
-
 	results = cursor.fetchall()
 
 	if len(results) > 0:
+		# display all the posts on the page
 		return render_template('listings.html', listings=results)
 	else:
+		# flash the page with warning for no listings
 		flash('No listings online!', 'warning')
-		return render_template('listings.html')
+		return render_template('listings.html', listings=[])
 
 @app.route('/listings/<string:listing_id>')
 def listing(listing_id):
@@ -58,56 +60,61 @@ def listing(listing_id):
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# get info about the specific listing from the db with listing)id
 	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
 
+	# fetch only 1 result, the first one
 	result = cursor.fetchone()
 
 	if result is not None:
+		# display appropriate results
 		return render_template('listing.html', listing=result)
 	else:
+		# flash page with alert, wrong listing_id provided
 		flash('Not a valid listing!', 'alert')
-		return render_template('listing.html')
+		return render_template('listing.html', listing=[])
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	if request.method == 'POST':
-		app.logger.info(request.form)
 
+		# get inputted user data
 		username = request.form['username']
 		password = request.form['password']
-
-		app.logger.info(username)
-		app.logger.info(password)
 
 		# make SQL db connection and get cursor
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
+		# run a query to see if a matching user is found, should only be 1 user with same username
 		cursor.execute('SELECT * FROM users WHERE username = %s', (username, ))
+		result = cursor.fetchone()
 
-		results = cursor.fetchall()
 		if len(results) > 0:
-			first_result = results[0]
-
-			if sha256_crypt.verify(password, first_result[4]):
+			# check if password is correct with ecryption
+			if sha256_crypt.verify(password, result[4]):
 				session['logged_in'] = True
 				session['username'] = username
-				session['user_id'] = first_result[0]
+				session['user_id'] = result[0]
 
+				# flash success message, redirect to dashboard
 				flash('You are now logged in', 'success')
 				return redirect(url_for('dashboard'))
 			else:
+				# password didn't match the found username
 				error = 'Incorrect Password, please try again'
 				return render_template('login.html', error=error)
 		else:
 			cursor.close()
 			cnx.close()
 
+			# username just wasn't found
 			error = 'Username not found, please register'
 			return render_template('login.html', error=error)
 
 	return render_template('login.html')
 
+# form for registering a new user
 class RegisterForm(Form):
 	name = StringField('Name', [validators.Length(min=1, max=100)])
 	email = StringField('Email', [
@@ -128,6 +135,8 @@ class RegisterForm(Form):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 	form = RegisterForm(request.form)
+
+	# if user submits a POST to register and it passes form validation
 	if request.method == 'POST' and form.validate():
 		name = form.name.data
 		email = form.email.data
@@ -138,19 +147,24 @@ def register():
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
+		# get all the usernames from users table
 		cursor.execute('SELECT username FROM users')
 		usernames_results = cursor.fetchall()
 
+		# flatten the 2D list into a list
 		signed_up_usernames = sum(usernames_results, ())
 
+		# username is already in use and registered with
 		if username in signed_up_usernames:
 			flash('This username is in use, please select a new username', 'alert')
 
 			cursor.close()
 			cnx.close()
 
+			# redirect to register link to try again
 			return redirect(url_for('register'))
 
+		# new username in effect, add the user to database and continue registration
 		cursor.execute(
 			'INSERT INTO users(name, email, username, password) VALUES (%s, %s, %s, %s)',
 			(name, email, username, password)
@@ -162,11 +176,15 @@ def register():
 		cursor.close()
 		cnx.close()
 
+		# flash a successful message and get the user to login
 		flash('The user has been registered, login and start making your listings now!', 'success')
 
 		return redirect(url_for('login'))
+
+	# just viewing the registration form with GET method
 	return render_template('register.html', form=form)
 
+# function to check if a user is logged in via session cookies
 def is_logged_in(f):
 	@wraps(f)
 	def wrap(*args, **kwargs):
@@ -179,6 +197,7 @@ def is_logged_in(f):
 
 @app.route('/logout')
 def logout():
+	# clear session with logout and display message on logout
 	session.clear()
 	flash('You are now logged out', 'success')
 	return redirect(url_for('login'))
@@ -258,9 +277,9 @@ def edit_listing(listing_id):
 	form.price.data = article[4]
 
 	if request.method == 'POST' and form.validate():
-		title = request.form['title'] || ''
-		body = request.form['body'] || ''
-		price = request.form['price'] || ''
+		title = request.form['title'] or ''
+		body = request.form['body'] or ''
+		price = request.form['price'] or ''
 
 		# execute update sql command to db with form details
 		cursor.execute(
