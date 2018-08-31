@@ -90,7 +90,7 @@ def login():
 		cursor.execute('SELECT * FROM users WHERE username = %s', (username, ))
 		result = cursor.fetchone()
 
-		if len(results) > 0:
+		if result is not None:
 			# check if password is correct with ecryption
 			if sha256_crypt.verify(password, result[4]):
 				session['logged_in'] = True
@@ -210,18 +210,22 @@ def dashboard():
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# query according the author_id which is determined from session cookies
 	query = ("SELECT * FROM posts WHERE author_id = %s")
-
 	cursor.execute(query, (session['user_id'], ))
 
+	# fetch all listings by current user
 	results = cursor.fetchall()
 
 	if len(results) > 0:
+		# display listings by current logged in user
 		return render_template('dashboard.html', listings=results)
 	else:
+		# flash warning message for potential new user, needs to create a post
 		flash('No listings created by user, create one now!', 'warning')
 		return render_template('dashboard.html')
 
+# form used to create a new listing
 class PostForm(Form):
 	title = StringField('Title', [validators.Length(min=2, max=255)])
 	body = TextAreaField('Body', [validators.Length(min=6)])
@@ -231,30 +235,33 @@ class PostForm(Form):
 @is_logged_in
 def create_listing():
 	form = PostForm(request.form)
+
+	# POST method and validated through WTForms
 	if request.method == 'POST' and form.validate():
-		title = form.title.data
-		body = form.body.data
-		price = form.price.data
+		title = form.title.data or ''
+		body = form.body.data or ''
+		price = form.price.data or '' 
 
 		# make SQL db connection and get cursor
 		cnx = sql_connector()
 		cursor = cnx.cursor()
 
+		# insert the new listing into the database 
 		cursor.execute(
 			'INSERT INTO posts(title, author_id, body, price) VALUES (%s, %s, %s, %s)',
 			(title, session['user_id'], body, price)
 		)
 
-		# Commit all the changes into the database
+		# Commit all the changes into the database and close connection
 		cnx.commit()
-
 		cursor.close()
 		cnx.close()
 
-		flash('The post has been created!', 'success')
-
+		# flash success message for new listing, go back to dashboard
+		flash('The listing has been created!', 'success')
 		return redirect(url_for('dashboard'))
 
+	# render regular html if GET request seen
 	return render_template('create_listing.html', form=form)
 
 @app.route('/edit_listing/<string:listing_id>', methods=['GET', 'POST'])
@@ -265,8 +272,8 @@ def edit_listing(listing_id):
 	cnx = sql_connector()
 	cursor = cnx.cursor()
 
+	# get specific post to edit from db, first one that matches on db query
 	cursor.execute('SELECT * FROM posts WHERE id = %s', (listing_id, ))
-
 	article = cursor.fetchone()
 
 	form = PostForm(request.form)
@@ -292,8 +299,8 @@ def edit_listing(listing_id):
 		cursor.close()
 		cnx.close()
 
+		# send a success message after editing the listing
 		flash('The post has been updated!', 'success')
-
 		return redirect(url_for('dashboard'))
 
 	# close cursor and connection 

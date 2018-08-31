@@ -120,6 +120,7 @@ div.message-container.grid-container {
 }
 
 div.nav-bar {
+	margin-top: 50px;
 	min-height: 200px;
 	background-color: black;
 	color: white;
