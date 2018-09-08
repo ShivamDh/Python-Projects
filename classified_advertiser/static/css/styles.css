@@ -3,13 +3,22 @@ body.layout-body {
 }
 
 div.top-bar {
+	background-size: cover;
+}
 
+div.top-bar ul {
+	background: none;
 }
 
 a.title-link {
-	font-size: 24px;
+	font-size: 26px;
 	text-decoration: none;
 	background: transparent;
+	font-weight: bold;
+}
+
+input.search-input {
+	border-radius: 10px;
 }
 
 a.title-link {
@@ -26,7 +35,7 @@ a.listings-link {
 }
 
 .button.search-button:hover, .button.search-button:focus {
-  background-color: #c1ccd4;
+  background-color: #a9c5d8;
 }
 
 a.signin-link {
@@ -121,9 +130,9 @@ div.message-container.grid-container {
 
 div.nav-bar {
 	margin-top: 50px;
-	min-height: 200px;
-	background-color: black;
+	min-height: 150px;
 	color: white;
+	background-size: contain;
 }
 
 .grid-padding-y > div.cell.field-cell {
@@ -175,4 +184,9 @@ td.listing-body {
 	display: flex;
 	height: 60px;
 	overflow: hidden;
+}
+
+div.grid-x.navbar-container {
+	padding-top: 30px;
+	text-align: center;
 }

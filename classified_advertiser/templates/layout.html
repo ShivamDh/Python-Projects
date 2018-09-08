@@ -11,7 +11,7 @@
 		<title> Classified Advertiser </title>
 	</head>
 	<body class="layout-body">
-		<div class="top-bar">
+		<div class="top-bar" style="background: url(/static/img/header-background.jpg)">
 			<div class="top-bar-left">
 				<ul class="dropdown menu right" data-dropdown-menu>
 					<li>
@@ -24,12 +24,14 @@
 			<div class="top-bar-right">
 				<ul class="menu">
 					<li>
-						<input type="search" placeholder="Search">
+						<input class="search-input" type="search" placeholder="Search">
 					</li>
 					<li>
-						<button type="button" class="button hollow search-button">
-							Search
-						</button>
+						<form method="POST" action="">
+							<a class="signin-link" href="/search">
+								<input type="submit" value="Search" class="button hollow search-button" />
+							</a>
+						</form>
 					</li>
 					{% if session.logged_in %}
 						<li>
@@ -57,12 +59,30 @@
 		{% block body %}
 		{% endblock %}
 
-		<div class="nav-bar">
+		<div class="nav-bar" style="background: url(/static/img/footer-background11.jpg); background-size: contain">
 			<div class="grid-container">
-				<div class="grid-x grid-margin-x">
-					<div class="column-1 small-12 medium-4">CLASSIFIEDS</div>
-					<div class="column-2 small-12 medium-4">ABOUT</div>
-					<div class="column-3 small-12 medium-4">CONTACT</div>
+				<div class="navbar-container grid-x">
+					<div class="column-1 small-12 medium-4">
+						<a class="navbar-heading" href="/">
+							<div class="navbar-link">HOME</div>
+						</a>
+						<a class="navbar-heading" href="/listings">
+							<div class="navbar-link">LISTINGS</div>
+						</a>
+					</div>
+					<div class="column-2 small-12 medium-4">
+						<a class="navbar-heading" href="/listings">
+							<div class="column-1 small-12 medium-4">ABOUT</div>
+						</a>
+					</div>
+					<div class="column-3 small-12 medium-4">
+						<a class="navbar-heading" href="/login">
+							<div class="column-1 small-12 medium-4">LOGIN</div>
+						</a>
+						<a class="navbar-heading" href="/register">
+							<div class="column-1 small-12 medium-4">REGISTER</div>
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
