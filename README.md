@@ -14,4 +14,7 @@ A small Python GUI written using tkinter and ttk that utilizes all the basic fun
 ### Starter Blog
 An easy to use Django blog template that theoretically one could clone and insert their own writing into and publish. Utilized Django's ready-to-use SqLite backend along with Jinja Templating and Bootstrap to build an intricate but sophisticated and convenient blog website.
 
-I am still in the process of completing and uploading some projects, but feel free to have a look around  
+### Classified Advertiser
+A simple Flask application meant to replicate the commonly used online classified websites. Built to scale easily and utilized by multiple users, the app uses user authentication and session cookies to ensure proper security. The app was built was polished with Zurb Foundation and a MySQL layer underneath. 
+
+I am always adding new projects to this workspace, so feel free to have a look around  
