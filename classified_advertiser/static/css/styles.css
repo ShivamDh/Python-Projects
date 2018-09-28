@@ -1,3 +1,5 @@
+/*Layout CSS styling*/
+
 body.layout-body {
 	background-color: #d4d4d4;
 }
@@ -64,6 +66,24 @@ a.signin-link {
   background-color: #a9c5d8;
 }
 
+div.nav-bar {
+	margin-top: 50px;
+	min-height: 150px;
+	color: white;
+	background-size: contain;
+}
+
+.media-links {
+	display: flex;
+}
+
+div.grid-x.navbar-container {
+	padding-top: 30px;
+	text-align: center;
+}
+
+/*Home Page Styling*/
+
 div.heading {
 	margin: 30px 20px;
 	text-align: center;
@@ -81,6 +101,8 @@ div.heading-2 {
 	color: #c5ba54;
 	padding-bottom: 10px;
 }
+
+/*Listing Page Styling*/
 
 div.item-body {
 	height: 75px;
@@ -111,13 +133,30 @@ a.item-link {
 	padding: 0;
 }
 
+div.card.listing {
+	border-width: 5px;
+	border-color: #8f8fff;
+}
+
+div.card-section {
+	background-color: #8f8fff;
+}
+
+div.callout.clearfix {
+	background-color: #cbd0ff;
+}
+
 .button.success.item-link-button {
 	margin: 0;
-	border-radius: 25px;
+	border-radius: 10px;
 }
 
 div.view-more {
 	text-align: center;
+}
+
+button.view-more-button {
+	border-radius: 5px;
 }
 
 h1.title {
@@ -128,16 +167,11 @@ div.message-container.grid-container {
 	margin-top: 15px;
 }
 
-div.nav-bar {
-	margin-top: 50px;
-	min-height: 150px;
-	color: white;
-	background-size: contain;
-}
-
 .grid-padding-y > div.cell.field-cell {
 	padding-top: 0;
 }
+
+/*Login Page Styling*/
 
 .register-now {
 	text-align: center;
@@ -166,10 +200,14 @@ span.help-inline {
 	margin-left: 10px;
 }
 
+/*Dashboard Page Styling*/
+
 .create-post-button {
 	border-radius: 10px;
 	margin-bottom: 0px;
 }
+
+/*Create Post Page Styling*/
 
 input.title-field-error, input.body-field-error, input.price-field-error {
 	margin-bottom: 0;
@@ -184,9 +222,4 @@ td.listing-body {
 	display: flex;
 	height: 60px;
 	overflow: hidden;
-}
-
-div.grid-x.navbar-container {
-	padding-top: 30px;
-	text-align: center;
 }
