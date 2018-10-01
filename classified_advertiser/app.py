@@ -16,8 +16,11 @@ def sql_connector():
 		database='classified_advertiser'
 	)
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
+	if request.method == 'POST':
+		search_query = request.form['search_field']
+		return redirect('/search=' + search_query)
 
 	# make SQL db connection and get cursor
 	cnx = sql_connector()
@@ -33,6 +36,15 @@ def index():
 	else:
 		# no results, insert default paramater
 		return render_template('home.html', listings=[])
+
+	
+@app.route('/search=<string:query>', methods=['GET', 'POST'])
+def search(query):
+	if request.method == 'POST':
+		search_query = request.form['search_field']
+		return redirect('/search=' + search_query)
+
+	return render_template('search.html')
 
 @app.route('/listings')
 def listings():
@@ -50,7 +62,7 @@ def listings():
 		return render_template('listings.html', listings=results)
 	else:
 		# flash the page with warning for no listings
-		flash('No listings online!', 'warning')
+		flash('No listings! Create one as a user using the dashboard', 'warning')
 		return render_template('listings.html', listings=[])
 
 @app.route('/listings/<string:listing_id>')
