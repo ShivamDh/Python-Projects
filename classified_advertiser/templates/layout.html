@@ -23,16 +23,16 @@
 			</div>
 			<div class="top-bar-right">
 				<ul class="menu">
-					<li>
-						<input class="search-input" type="search" placeholder="Search">
-					</li>
-					<li>
-						<form method="POST" action="">
-							<a class="signin-link" href="/search">
+					<form class="search-form" method="POST" action="">
+						<li>
+							<input name="search_field" class="search-input" type="search" placeholder="Search">
+						</li>
+						<li>
+							<a class="signin-link">
 								<input type="submit" value="Search" class="button hollow search-button" />
 							</a>
-						</form>
-					</li>
+						</li>
+					</form>
 					{% if session.logged_in %}
 						<li>
 							<a class="signin-link" href="/logout">
@@ -64,26 +64,18 @@
 				<div class="navbar-container grid-x">
 					<div class="column-1 small-12 medium-4">
 						<div class="navbar-link-container">
-							<a class="navbar-link" href="/">
-								HOME
-							</a>
+							<a class="navbar-link" href="/"> HOME </a>
 						</div>
 						<div class="navbar-link-container">
-							<a class="navbar-link" href="/listings">
-								LISTINGS
-							</a>
+							<a class="navbar-link" href="/listings"> LISTINGS </a>
 						</div>
 					</div>
 					<div class="column-2 small-12 medium-4">
 						<div>
-							<a class="navbar-link" href="/login">
-								LOGIN
-							</a>
+							<a class="navbar-link" href="/login"> LOGIN </a>
 						</div>
 						<div>
-							<a class="navbar-link" href="/register">
-								REGISTER
-							</a>
+							<a class="navbar-link" href="/register"> REGISTER </a>
 						</div>
 					</div>
 					<div class="media-links column-3 small-12 medium-4">

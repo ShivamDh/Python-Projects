@@ -19,6 +19,10 @@ a.title-link {
 	font-weight: bold;
 }
 
+form.search-form {
+	display: flex;
+}
+
 input.search-input {
 	border-radius: 10px;
 }
@@ -73,8 +77,37 @@ div.nav-bar {
 	background-size: contain;
 }
 
+.navbar-link {
+	font-size: 19px;
+	color: antiquewhite;
+}
+
+.navbar-link:hover {
+	color: burlywood;
+}
+
+.copyright {
+	font-size: 22px;
+	color: antiquewhite;
+}
+
 .media-links {
+	justify-content: space-evenly;
 	display: flex;
+}
+
+a.media-link {
+	height: 50px;
+	width: 50px;
+	border-radius: 100%;
+}
+
+a.media-link > img {
+	border-radius: 100%;
+}
+
+a.media-link:hover {
+	opacity: 0.5;
 }
 
 div.grid-x.navbar-container {
