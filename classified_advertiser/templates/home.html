@@ -18,14 +18,15 @@
 					<div class="cell">
 						<div class="card listing">
 							<div class="item-image-container" style="background: url(/static/img/placeholder.jpg); background-size: cover">
-								<div class="item-image" src="/static/img/listing_{{listing[0]}}.jpg">
-								</div>
+								<img class="item-image" src="/static/img/listing_{{listing[0]}}.jpg" />
 							</div>
 							<div class="card-section">
 								<h4>
 									{{ listing[1] }}
 								</h4>
-								{{ listing[3]|safe }}
+								<div class="card-description">
+									{{ listing[3]|safe }}
+								</div>
 								<hr/>
 								<div class="callout clearfix">
 									<div class="float-left item-price">

@@ -4,7 +4,7 @@
 
 	<div class="grid-container">
 		<h1> Dashboard </h1>
-		<h1> <small> Welcome {{ session.username }} </small> </h1>
+		<h3> Welcome {{ session.username }} </h3>
 
 		<a class="create-post-link" href="/create_listing">
 			<button type="button" class="create-post-button button success">
@@ -15,7 +15,6 @@
 		<table class="hover">
 			<thead>
 				<tr>
-					<th width="100"> Article ID </th>
 					<th width="150"> Title </th>
 					<th> Description </th>
 					<th width="70"> Price($) </th>
@@ -28,7 +27,6 @@
 			<tbody>
 				{% for listing in listings %}
 					<tr>
-						<td> {{ listing[0] }} </td>
 						<td> {{ listing[1] }} </td>
 						<td class="listing-body"> {{ listing[3]|safe }} </td>
 						<td> {{ listing[4] }} </td>
