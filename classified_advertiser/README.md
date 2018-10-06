@@ -1,21 +1,21 @@
-# My First Django Project: A Blog!
+# A New Flask Project!
 
-After some great learning and growth in Django, I decided to create an easy to use Django blog to help apply what I had learned and perhaps provide a template for any potential blogger.The backend data storage is managed by SqLite while the front-end was built using Bootstrap. Jinja Templating also allowed for easy to use and modular HTML code to re-use.
+Welcome to my flask project, where I decided to build a new classified advertiser to help test and hone my skills with Python, Flask and MySQL. I modelled my website with features similar to post advertising websites like Kijiji and Craigslist, with capabilities for searching, viewing and posting new adverts through a login authentication system.
 
 ## Below are some screenshots from the web app
 
 This is the main landing page or home screen:
 
-<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/repo-specific/starter_blog/other/homepage.PNG" />
+<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/master/classified_advertiser/screenshots/home-page.PNG" />
 
-This page is displays all the blogs available to view:
+Users can login or register for an account using:
 
-<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/repo-specific/starter_blog/other/blogspage.PNG" />
+<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/master/classified_advertiser/screenshots/login-register-page.PNG" />
 
-Clicking on a specific blog opens a larger view to see more details:
+Once logged in, users can modify their own listings:
 
-<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/repo-specific/starter_blog/other/blog-page.PNG" />
+<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/master/classified_advertiser/screenshots/dashboard.PNG" />
 
-A nice about page to view more about the author:
+And of course, listings can be maded through a simple form:
 
-<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/repo-specific/starter_blog/other/aboutpage.PNG" />
+<img src="https://raw.githubusercontent.com/ShivamDh/Python-Projects/master/classified_advertiser/screenshots/create-listing.PNG" />
