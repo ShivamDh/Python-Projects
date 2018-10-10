@@ -30,6 +30,9 @@ def index():
 	cursor.execute('SELECT * FROM posts')
 	results = cursor.fetchmany(size=3)
 
+	cursor.close()
+	cnx.close()
+
 	if len(results) > 0:
 		# found results, display the results
 		return render_template('home.html', listings=results)
@@ -44,7 +47,18 @@ def search(query):
 		search_query = request.form['search_field']
 		return redirect('/search=' + search_query)
 
-	return render_template('search.html')
+	# make SQL db connection and get cursor
+	cnx = sql_connector()
+	cursor = cnx.cursor()
+
+	# fetch information about all posts
+	cursor.execute('SELECT * from posts WHERE LOWER(posts.title) LIKE \'%{0}%\' OR LOWER(posts.body) LIKE \'%{0}%\''.format(query))
+	results = cursor.fetchall()
+
+	cursor.close()
+	cnx.close()
+
+	return render_template('search.html', query=query, listings=results)
 
 @app.route('/listings')
 def listings():
@@ -56,6 +70,9 @@ def listings():
 	# fetch information about all posts
 	cursor.execute('SELECT * FROM posts')
 	results = cursor.fetchall()
+
+	cursor.close()
+	cnx.close()
 
 	if len(results) > 0:
 		# display all the posts on the page
@@ -77,6 +94,9 @@ def listing(listing_id):
 
 	# fetch only 1 result, the first one
 	result = cursor.fetchone()
+
+	cursor.close()
+	cnx.close()
 
 	if result is not None:
 		# display appropriate results
