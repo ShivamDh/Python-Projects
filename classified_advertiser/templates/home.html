@@ -17,7 +17,9 @@
 				{% for listing in listings %}
 					<div class="cell">
 						<div class="card listing">
-							<div class="item-image-container" style="background: url(/static/img/placeholder.jpg); background-size: cover">
+							<div class="item-image-container"
+								style="background: url(/static/img/placeholder.jpg); background-size: cover"
+							>
 								<img class="item-image" src="/static/img/listing_{{listing[0]}}.jpg" />
 							</div>
 							<div class="card-section">
@@ -45,7 +47,7 @@
 			</div>
 		</div>
 
-		{% if listings %}
+		{% if listings|length > 3 %}
 			<div class="view-more row">
 				<a class="view-more-link" href="/listings">
 					<button type="button" class="button alert view-more-button">

@@ -9,17 +9,17 @@
 		<div class="grid-x grid-padding-x small-up-2 medium-up-3">
 			{% for listing in listings %}
 				<div class="cell">
-					<div class="card">
+					<div class="card listing">
 						<div class="item-image-container"
-							style="background: url(/static/img/placeholder.jpg); background-size: cover">
-							<div class="item-image" src="/static/img/listing_{{listing[0]}}.jpg">
-							</div>
+							style="background: url(/static/img/placeholder.jpg); background-size: cover"
+						>
+							<img class="item-image" src="/static/img/listing_{{listing[0]}}.jpg" />
 						</div>
 						<div class="card-section">
 							<h4>
 								{{ listing[1] }}
 							</h4>
-							<div class="item-body">
+							<div class="card-description">
 								{{ listing[3]|safe }}
 							</div>
 							<hr/>
