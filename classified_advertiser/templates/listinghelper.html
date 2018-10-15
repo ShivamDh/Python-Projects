@@ -1,0 +1,30 @@
+{% macro render_listing(listing) %}
+	<div class="cell">
+		<div class="card listing">
+			<div class="item-image-container"
+				style="background: url(/static/img/placeholder.jpg); background-size: cover"
+			>
+				<img class="item-image" src="/static/img/listing_{{listing[0]}}.jpg" />
+			</div>
+			<div class="card-section">
+				<h4>
+					{{ listing[1] }}
+				</h4>
+				<div class="card-description">
+					{{ listing[3]|safe }}
+				</div>
+				<hr/>
+				<div class="callout clearfix">
+					<div class="float-left item-price">
+						${{ listing[4] }}
+					</div>
+					<a class="item-link float-right" href="/listings/{{listing[0]}}">
+						<button type="button" class="button success item-link-button">
+							View
+						</button>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endmacro %}
